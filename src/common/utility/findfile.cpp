@@ -168,17 +168,17 @@ void D_AddConfigFiles(std::vector<std::string>& wadfiles, const char* section, c
 {
 	if (config && config->SetSection(section))
 	{
-		const char* key;
-		const char* value;
+		FString key;
+		FString value;
 		FConfigFile::Position pos;
 
 		while (config->NextInSection(key, value))
 		{
-			if (stricmp(key, "Path") == 0)
+			if (key == FConfigFile::Tokens::path)
 			{
 				// D_AddWildFile resets config's position, so remember it
 				config->GetPosition(pos);
-				D_AddWildFile(wadfiles, ExpandEnvVars(value).GetChars(), extension, config, optional);
+				D_AddWildFile(wadfiles, ExpandEnvVars(value.GetChars()).GetChars(), extension, config, optional);
 				// Reset config's position to get next wad
 				config->SetPosition(pos);
 			}
@@ -244,16 +244,16 @@ const char* BaseFileSearch(const char* file, const char* ext, bool lookfirstinpr
 
 	if (config != nullptr && config->SetSection("FileSearch.Directories"))
 	{
-		const char* key;
-		const char* value;
+		FString key;
+		FString value;
 
 		while (config->NextInSection(key, value))
 		{
-			if (stricmp(key, "Path") == 0)
+			if (key == FConfigFile::Tokens::path)
 			{
 				FString dir;
 
-				dir = NicePath(value);
+				dir = NicePath(value.GetChars());
 				if (dir.IsNotEmpty())
 				{
 					BFSwad.Format("%s%s%s", dir.GetChars(), dir.Back() == '/' ? "" : "/", file);
@@ -263,11 +263,11 @@ const char* BaseFileSearch(const char* file, const char* ext, bool lookfirstinpr
 					}
 				}
 			}
-			else if (stricmp(key, "RecursivePath") == 0)
+			else if (key == FConfigFile::Tokens::recursive_path)
 			{
 				FString dir;
 
-				dir = NicePath(value);
+				dir = NicePath(value.GetChars());
 				if (dir.IsNotEmpty())
 				{
 					if (dir.Back() == '/')

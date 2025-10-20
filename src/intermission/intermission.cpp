@@ -989,21 +989,26 @@ void DIntermissionController::Start()
 
 bool DIntermissionController::Responder (FInputEvent *ev)
 {
+	static const FString toggleConsoleString = FString("toggleconsole");
+	static const FString screenshotString = FString("screenshot");
+	static const FString menumainString = FString("menu_main");
+	static const FString pauseString = FString("pause");
+
 	if (mScreen != NULL)
 	{
 		if (ev->Type == EV_KeyDown)
 		{
-			const char *cmd = Bindings.GetBind (ev->KeyScan);
+			const FString cmd = Bindings.GetBind (ev->KeyScan);
 
-			if (cmd != nullptr)
+			if (cmd.Len() > 0)
 			{
-				if (!stricmp(cmd, "toggleconsole") || !stricmp(cmd, "screenshot"))
+				if (cmd == toggleConsoleString || cmd == screenshotString)
 				{
 					return false;
 				}
 				// The following is needed to be able to enter main menu with a controller,
 				// by pressing buttons that are usually assigned to this action, Start and Back by default
-				else if (!stricmp(cmd, "menu_main") || !stricmp(cmd, "pause"))
+				else if (cmd == menumainString || cmd == pauseString)
 				{
 					M_StartControlPanel(true);
 					M_SetMenu(NAME_MainMenu, -1);

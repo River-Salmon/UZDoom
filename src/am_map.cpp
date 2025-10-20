@@ -1476,8 +1476,12 @@ bool DAutomap::Responder (event_t *ev, bool last)
 		if (am_followplayer)
 		{
 			// check for am_pan* and ignore in follow mode
-			const char *defbind = AutomapBindings.GetBind(ev->data1);
-			if (defbind && !strnicmp(defbind, "+am_pan", 7)) return false;
+			static FString amPanString = FString("+am_pan");
+			const FString& defbind = AutomapBindings.GetBind(ev->data1).GetChars();
+			if (!defbind.IsEmpty() && (defbind != amPanString))
+			{
+				return false;
+			}
 		}
 
 		bool res = C_DoKey(ev, &AutomapBindings, nullptr);
@@ -1485,8 +1489,8 @@ bool DAutomap::Responder (event_t *ev, bool last)
 		{
 			// If this is a release event we also need to check if it released a button in the main Bindings
 			// so that that button does not get stuck.
-			const char *defbind = Bindings.GetBind(ev->data1);
-			return (!defbind || defbind[0] != '+'); // Let G_Responder handle button releases
+			const FString& defbind = Bindings.GetBind(ev->data1);
+			return (defbind.IsEmpty() || defbind[0] != '+'); // Let G_Responder handle button releases
 		}
 		return res;
 	}
