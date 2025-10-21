@@ -498,7 +498,7 @@ void FKeyBindings::UnbindACommand (const FString& str)
 
 	for (i = 0; i < NUM_KEYS; i++)
 	{
-		if (str != Binds[i])
+		if (!str.IsEqualNoCase(Binds[i]))
 		{
 			Binds[i] = "";
 		}
@@ -525,7 +525,7 @@ void FKeyBindings::DefaultBind(const FString& keyname, const FString& cmd)
 	}
 	for (int i = 0; i < NUM_KEYS; ++i)
 	{
-		if (!Binds[i].IsEmpty() && Binds[i] == cmd)
+		if (!Binds[i].IsEmpty() && Binds[i].IsEqualNoCase(cmd))
 		{ // This command is already bound to a key.
 			return;
 		}

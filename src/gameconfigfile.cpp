@@ -986,7 +986,7 @@ void FGameConfigFile::AddAutoexec (FArgs *list, const char *game)
 	{
 		while (NextInSection (key, value))
 		{
-			if (key == Tokens::path && !value[0] != '\0')
+			if (key.IsEqualNoCase(Tokens::path) && !value[0] != '\0')
 			{
 				FString expanded_path = ExpandEnvVars(value.GetChars());
 				if (FileExists(expanded_path))

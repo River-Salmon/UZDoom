@@ -389,7 +389,7 @@ void FConfigFile::ClearKey(const FString& key)
 	}
 	FConfigEntry **prober = &CurrentSection->RootEntry, *probe = *prober;
 
-	while (probe != NULL && (probe->Key != key))
+	while (probe != NULL && (!probe->Key.IsEqualNoCase((key))))
 	{
 		prober = &probe->Next;
 		probe = *prober;
@@ -533,7 +533,7 @@ FConfigFile::FConfigEntry *FConfigFile::FindEntry (
 {
 	FConfigEntry *probe = section->RootEntry;
 
-	while (probe != NULL && (probe->Key != key))
+	while (probe != NULL && (!probe->Key.IsEqualNoCase(key)))
 	{
 		probe = probe->Next;
 	}
@@ -811,7 +811,7 @@ bool FConfigFile::WriteConfigFile () const
 			{ // Multi-line value
 				const FString endtag = GenerateEndTag(entry->Value);
 				file->Printf ("%s=<<<%s\n%s\n>>>%s\n", entry->Key.GetChars(),
-					endtag, entry->Value.GetChars(), endtag.GetChars());
+					endtag.GetChars(), entry->Value.GetChars(), endtag.GetChars());
 			}
 			entry = entry->Next;
 		}
