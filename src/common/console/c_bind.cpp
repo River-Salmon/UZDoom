@@ -343,7 +343,7 @@ void FKeyBindings::UnbindKey(const FString& key)
 	}
 	else
 	{
-		Printf ("Unknown key \"%s\"\n", key);
+		Printf ("Unknown key \"%s\"\n", key.GetChars());
 		return;
 	}
 }
@@ -377,12 +377,12 @@ void FKeyBindings::PerformBind(FCommandLine &argv, const FString& msg)
 	}
 	else
 	{
-		Printf ("%s:\n", msg);
+		Printf ("%s:\n", msg.GetChars());
 
 		for (i = 0; i < NUM_KEYS; i++)
 		{
 			if (!Binds[i].IsEmpty())
-				Printf ("%s \"%s\"\n", KeyName (i), Binds[i].GetChars());
+				Printf ("%s \"%s\"\n", KeyName (i).GetChars(), Binds[i].GetChars());
 		}
 	}
 }
@@ -516,7 +516,7 @@ void FKeyBindings::DefaultBind(const FString& keyname, const FString& cmd)
 	int key = GetKeyFromName (keyname);
 	if (key == 0)
 	{
-		Printf ("Unknown key \"%s\"\n", keyname);
+		Printf ("Unknown key \"%s\"\n", keyname.GetChars());
 		return;
 	}
 	if (!Binds[key].IsEmpty())

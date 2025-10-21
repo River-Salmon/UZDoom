@@ -3492,7 +3492,7 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		{
 			if (key.IsEqualNoCase(FConfigFile::Tokens::path) && FileExists (value))
 			{
-				if (!batchrun) Printf ("Applying patch %s\n", value);
+				if (!batchrun) Printf ("Applying patch %s\n", value.GetChars());
 				D_LoadDehFile(value.GetChars(), 0);
 			}
 		}

@@ -805,13 +805,13 @@ bool FConfigFile::WriteConfigFile () const
 		{
 			if (strpbrk(entry->Value.GetChars(), "\r\n") == NULL)
 			{ // Single-line value
-				file->Printf ("%s=%s\n", entry->Key, entry->Value);
+				file->Printf ("%s=%s\n", entry->Key.GetChars(), entry->Value.GetChars());
 			}
 			else
 			{ // Multi-line value
 				const FString endtag = GenerateEndTag(entry->Value);
-				file->Printf ("%s=<<<%s\n%s\n>>>%s\n", entry->Key,
-					endtag, entry->Value, endtag);
+				file->Printf ("%s=<<<%s\n%s\n>>>%s\n", entry->Key.GetChars(),
+					endtag, entry->Value.GetChars(), endtag.GetChars());
 			}
 			entry = entry->Next;
 		}

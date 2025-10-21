@@ -810,7 +810,7 @@ CCMD (eval)
 				}
 				else
 				{
-					Printf ("%s\n", static_cast<FStringProd *>(prod)->Value);
+					Printf ("%s\n", static_cast<FStringProd *>(prod)->Value.GetChars());
 				}
 			}
 			M_Free (prod);
