@@ -917,7 +917,7 @@ class DAutomap :public DAutomapBase
 	class Tokens
 	{
 	public:
-		static inline const FString am_pan = FString("+am_pan");
+		static inline const FString am_pan_prefix = FString("+am_pan");
 	};
 
 	//FLevelLocals *Level;
@@ -1481,9 +1481,11 @@ bool DAutomap::Responder (event_t *ev, bool last)
 	{
 		if (am_followplayer)
 		{
-			// check for am_pan* and ignore in follow mode
+			// check for am_pan prefix and ignore in follow mode
 			const FString& defbind = AutomapBindings.GetBind(ev->data1);
-			if (!defbind.IsEmpty() && (defbind.IsEqualNoCase(Tokens::am_pan)))
+			const size_t prefixCharCount = Tokens::am_pan_prefix.CharacterCount();
+			if (defbind.CharacterCount() >= prefixCharCount && 
+				(defbind.CompareNoCase(Tokens::am_pan_prefix, Tokens::am_pan_prefix.Len()) == 0))
 			{
 				return false;
 			}
