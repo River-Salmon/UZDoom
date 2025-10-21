@@ -399,7 +399,7 @@ void FSoundFontManager::CollectSoundfonts()
 
 		while (GameConfig->NextInSection (key, value))
 		{
-			if (key == FConfigFile::Tokens::path)
+			if (key.IsEqualNoCase(FConfigFile::Tokens::path))
 			{
 				FileSys::FileList list;
 

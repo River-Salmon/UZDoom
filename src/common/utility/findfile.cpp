@@ -174,7 +174,7 @@ void D_AddConfigFiles(std::vector<std::string>& wadfiles, const char* section, c
 
 		while (config->NextInSection(key, value))
 		{
-			if (key == FConfigFile::Tokens::path)
+			if (key.IsEqualNoCase(FConfigFile::Tokens::path))
 			{
 				// D_AddWildFile resets config's position, so remember it
 				config->GetPosition(pos);
@@ -249,7 +249,7 @@ const char* BaseFileSearch(const char* file, const char* ext, bool lookfirstinpr
 
 		while (config->NextInSection(key, value))
 		{
-			if (key == FConfigFile::Tokens::path)
+			if (key.IsEqualNoCase(FConfigFile::Tokens::path))
 			{
 				FString dir;
 
@@ -263,7 +263,7 @@ const char* BaseFileSearch(const char* file, const char* ext, bool lookfirstinpr
 					}
 				}
 			}
-			else if (key == FConfigFile::Tokens::recursive_path)
+			else if (key.IsEqualNoCase(FConfigFile::Tokens::recursive_path))
 			{
 				FString dir;
 

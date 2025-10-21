@@ -709,11 +709,11 @@ void FGameConfigFile::DoGameSetup (const char *gamename)
 		FString name;
 		while (NextInSection (key, value))
 		{
-			if (key == FConfigFile::Tokens::name)
+			if (key.IsEqualNoCase(FConfigFile::Tokens::name))
 			{
 				name = value;
 			}
-			else if (key == FConfigFile::Tokens::command && !name.IsEmpty())
+			else if (key.IsEqualNoCase(FConfigFile::Tokens::command) && !name.IsEmpty())
 			{
 				C_SetAlias (name.GetChars(), value.GetChars());
 				name = FConfigFile::Tokens::empty;

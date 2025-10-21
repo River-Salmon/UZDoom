@@ -462,12 +462,12 @@ void FIWadManager::CollectSearchPaths()
 
 		while (GameConfig->NextInSection(key, value))
 		{
-			if (key == FConfigFile::Tokens::path)
+			if (key.IsEqualNoCase(FConfigFile::Tokens::path))
 			{
 				FString nice = NicePath(value.GetChars());
 				if (nice.Len() > 0) mSearchPaths.Push(nice);
 			}
-			else if (key == FConfigFile::Tokens::recursive_path)
+			else if (key.IsEqualNoCase(FConfigFile::Tokens::recursive_path))
 			{
 				FString nice = NicePath(value.GetChars());
 				if (nice.Len() > 0) mRecursiveSearchPaths.Push(nice);

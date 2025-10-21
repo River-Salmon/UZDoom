@@ -197,19 +197,19 @@ static int GetConfigKeyFromName (const FString& key)
 	int keynum = GetKeyFromName(key);
 	if (keynum == 0)
 	{
-		if (key==FString("LeftBracket"))
+		if (key.IsEqualNoCase("LeftBracket"))
 		{
 			keynum = GetKeyFromName ("[");
 		}
-		else if (key == FString("RightBracket"))
+		else if (key.IsEqualNoCase("RightBracket"))
 		{
 			keynum = GetKeyFromName ("]");
 		}
-		else if (key == FString("Equals"))
+		else if (key.IsEqualNoCase("Equals"))
 		{
 			keynum = GetKeyFromName ("=");
 		}
-		else if (key == FString("KP-Equals"))
+		else if (key.IsEqualNoCase("KP-Equals"))
 		{
 			keynum = GetKeyFromName ("kp=");
 		}

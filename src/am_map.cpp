@@ -914,6 +914,12 @@ class DAutomap :public DAutomapBase
 		F_PANINC = 140 / TICRATE,	// how much the automap moves window per tic in frame-buffer coordinates moves 140 pixels at 320x200 in 1 second
 	};
 
+	class Tokens
+	{
+	public:
+		static inline const FString am_pan = FString("+am_pan");
+	};
+
 	//FLevelLocals *Level;
 	// scale on entry
 	// used by MTOF to scale from map-to-frame-buffer coords
@@ -1476,9 +1482,9 @@ bool DAutomap::Responder (event_t *ev, bool last)
 		if (am_followplayer)
 		{
 			// check for am_pan* and ignore in follow mode
-			static FString amPanString = FString("+am_pan");
+			static FString amPanString = FString();
 			const FString& defbind = AutomapBindings.GetBind(ev->data1).GetChars();
-			if (!defbind.IsEmpty() && (defbind != amPanString))
+			if (!defbind.IsEmpty() && (!defbind.IsEqualNoCase(Tokens::am_pan)))
 			{
 				return false;
 			}
