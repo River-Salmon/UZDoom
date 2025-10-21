@@ -1482,9 +1482,8 @@ bool DAutomap::Responder (event_t *ev, bool last)
 		if (am_followplayer)
 		{
 			// check for am_pan* and ignore in follow mode
-			static FString amPanString = FString();
-			const FString& defbind = AutomapBindings.GetBind(ev->data1).GetChars();
-			if (!defbind.IsEmpty() && (!defbind.IsEqualNoCase(Tokens::am_pan)))
+			const FString& defbind = AutomapBindings.GetBind(ev->data1);
+			if (!defbind.IsEmpty() && (defbind.IsEqualNoCase(Tokens::am_pan)))
 			{
 				return false;
 			}
