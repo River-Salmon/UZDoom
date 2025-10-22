@@ -32,6 +32,7 @@
 */
 
 #pragma once
+#include <type_traits>
 
 /*
  * TFlags
@@ -41,7 +42,9 @@
  * T is the enum type of individual flags,
  * TT is the underlying integer type used (defaults to uint32_t)
  */
-template<typename T, typename TT = uint32_t>
+//NOTE: all TFlags<> are 32 bit unless specifically specified otherwise. We cannot automatically inherit the underlying type storage
+//until std::underlying_type is constexpr.
+template<typename T, typename TT = typename std::underlying_type<T>::type>
 class TFlags
 {
 	struct ZeroDummy {};
@@ -53,10 +56,14 @@ public:
 
 	TFlags() = default;
 	TFlags(const Self& other) = default;
+	TFlags(Self& other) = default;
+	TFlags(Self&& other) = default;
+	~TFlags() = default;
 	constexpr TFlags (T value) : Value (static_cast<TT> (value)) {}
 
 	// This allows initializing the flagset with 0, as 0 implicitly converts into a null pointer.
-	constexpr TFlags (ZeroDummy*) : Value (0) {}
+	explicit constexpr TFlags (ZeroDummy*) : Value (0) {}
+	explicit constexpr TFlags(const TT& inVal) : Value(inVal) {} //allowing creation from underlying explicitly, for compat with VM
 
 	// Relation operators
 	constexpr Self operator| (const Self& other) const { return Self::FromInt (Value | other.GetValue()); }
@@ -84,6 +91,12 @@ public:
 	// Set the value of the flagset manually with an integer.
 	// Please think twice before using this.
 	static constexpr Self FromInt (TT value) { return Self (static_cast<T> (value)); }
+	static constexpr TT ToUnderlying(Self self) { return self.Value; }
+	static constexpr unsigned ToUnderlyingAsUint(Self self) 
+	{
+		static_assert(sizeof(TT) <= sizeof(unsigned)); //prevent narrowing conversion
+		return (unsigned)self.Value; 
+	}
 
 private:
 	template<typename X> constexpr Self operator| (X value) const { return Self::FromInt (Value | value); }

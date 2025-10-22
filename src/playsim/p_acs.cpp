@@ -9019,7 +9019,7 @@ scriptwait:
 				{
 					S_Sound (
 						activationline->frontsector,
-						CHAN_AUTO, 0,	// Not CHAN_AREA, because that'd probably break existing scripts.
+						CHAN_AUTO, CHANF_NONE,	// Not CHAN_AREA, because that'd probably break existing scripts.
 						S_FindSound(lookup),
 						(float)(STACK(1)) / 127.f,
 						ATTN_NORM);
@@ -9027,7 +9027,7 @@ scriptwait:
 				else
 				{
 					S_Sound (
-						CHAN_AUTO, 0,
+						CHAN_AUTO, CHANF_NONE,
 						lookup,
 						(float)(STACK(1)) / 127.f,
 						ATTN_NORM);
@@ -9040,7 +9040,7 @@ scriptwait:
 			lookup = Level->Behaviors.LookupString (STACK(2));
 			if (lookup != NULL)
 			{
-				S_Sound (CHAN_AUTO, 0,
+				S_Sound (CHAN_AUTO, CHANF_NONE,
 						 lookup,
 						 (float)(STACK(1)) / 127.f, ATTN_NONE);
 			}
@@ -9051,7 +9051,7 @@ scriptwait:
 			lookup = Level->Behaviors.LookupString (STACK(2));
 			if (lookup != NULL && activator && activator->CheckLocalView())
 			{
-				S_Sound (CHAN_AUTO, 0,
+				S_Sound (CHAN_AUTO, CHANF_NONE,
 						 lookup,
 						 (float)(STACK(1)) / 127.f, ATTN_NONE);
 			}
@@ -9064,13 +9064,13 @@ scriptwait:
 			{
 				if (activator != NULL)
 				{
-					S_Sound (activator, CHAN_AUTO, 0,
+					S_Sound (activator, CHAN_AUTO, CHANF_NONE,
 							 lookup,
 							 (float)(STACK(1)) / 127.f, ATTN_NORM);
 				}
 				else
 				{
-					S_Sound (CHAN_AUTO, 0,
+					S_Sound (CHAN_AUTO, CHANF_NONE,
 							 lookup,
 							 (float)(STACK(1)) / 127.f, ATTN_NONE);
 				}
@@ -9238,7 +9238,7 @@ scriptwait:
 
 				while ( (spot = iterator.Next ()) )
 				{
-					S_Sound (spot, CHAN_AUTO, 0,
+					S_Sound (spot, CHAN_AUTO, CHANF_NONE,
 							 lookup,
 							 (float)(STACK(1))/127.f, ATTN_NORM);
 				}

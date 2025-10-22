@@ -46,6 +46,7 @@
 #include "name.h"
 #include "scopebarrier.h"
 #include <type_traits>
+#include "tflags.h"
 
 class DObject;
 union VMOP;
@@ -846,6 +847,7 @@ bool AssertObject(void * ob);
 
 // For required parameters.
 #define PARAM_INT_AT(p,x)			assert((p) < numparam); assert(reginfo[p] == REGT_INT); int x = param[p].i;
+#define PARAM_FLAGS_AT(T, p,x)			assert((p) < numparam); assert(reginfo[p] == REGT_INT); unsigned x = T::ToUnderlyingAsUint(T::FromInt(param[p].i));
 #define PARAM_UINT_AT(p,x)			assert((p) < numparam); assert(reginfo[p] == REGT_INT); unsigned x = param[p].i;
 #define PARAM_BOOL_AT(p,x)			assert((p) < numparam); assert(reginfo[p] == REGT_INT); bool x = !!param[p].i;
 #define PARAM_NAME_AT(p,x)			assert((p) < numparam); assert(reginfo[p] == REGT_INT); FName x = ENamedName(param[p].i);
@@ -873,6 +875,7 @@ bool AssertObject(void * ob);
 #define PARAM_PROLOGUE				int paramnum = -1;
 
 #define PARAM_INT(x)				++paramnum; PARAM_INT_AT(paramnum,x)
+#define PARAM_FLAGS(T, x)				++paramnum; PARAM_FLAGS_AT(T, paramnum,x)
 #define PARAM_UINT(x)				++paramnum; PARAM_UINT_AT(paramnum,x)
 #define PARAM_BOOL(x)				++paramnum; PARAM_BOOL_AT(paramnum,x)
 #define PARAM_NAME(x)				++paramnum; PARAM_NAME_AT(paramnum,x)
@@ -916,6 +919,11 @@ namespace
 	template<typename T> struct native_is_valid { static const bool value = false; static const bool retval = false; };
 	template<typename T> struct native_is_valid<T*> { static const bool value = true; static const bool retval = true; };
 	template<typename T> struct native_is_valid<T&> { static const bool value = true; static const bool retval = true; };
+	template<typename T> struct native_is_valid<TFlags<T>> 
+	{ 
+		static const bool value = sizeof(TFlags<T>) <= sizeof(int); 
+		static const bool retval = sizeof(TFlags<T>) <= sizeof(int);
+	};
 	template<> struct native_is_valid<void> { static const bool value = true; static const bool retval = true; };
 	template<> struct native_is_valid<int> { static const bool value = true;  static const bool retval = true; };
 	// [RL0] this is disabled for now due to graf's concerns
@@ -932,7 +940,11 @@ struct DirectNativeDesc
 
 	template<typename Ret, typename... Params> DirectNativeDesc(Ret(*func)(Params...)) : Ptr(reinterpret_cast<void*>(func)) { ValidateRet<Ret>(); (ValidateType<Params>(), ...); }
 
-	template<typename T> void ValidateType() { static_assert(native_is_valid<T>::value, "Argument type is not valid as a direct native parameter or return type"); }
+	template<typename T> void ValidateType() 
+	{ 
+		static_assert(native_is_valid<T>::value, "Argument type is not valid as a direct native parameter or return type");
+	}
+
 	template<typename T> void ValidateRet() { static_assert(native_is_valid<T>::retval, "Return type is not valid as a direct native parameter or return type"); }
 
 	operator void *() const { return Ptr; }

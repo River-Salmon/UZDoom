@@ -54,6 +54,7 @@ class DViewPosition;
 struct FRenderViewpoint;
 
 #include <stdlib.h>
+#include "tflags.h"
 
 #define STEEPSLOPE		(46342/65536.)	// [RH] Minimum floorplane.c value for walking
 
@@ -222,12 +223,14 @@ enum SPF
 	SPF_SCALEDNOLERP = 4,
 };
 
-enum PCM
+enum PCM : uint8_t
 {
+	PCM_NONE = 0,
 	PCM_DROPOFF =		1,
 	PCM_NOACTORS =		1 << 1,
 	PCM_NOLINES =		1 << 2,
 };
+using ECheckMoveFlags = TFlags<PCM>;
 
 
 int P_CheckFov(AActor* t1, AActor* t2, double fov);
@@ -259,8 +262,8 @@ void	P_FakeZMovement (AActor *mo);
 bool	P_TryMove(AActor* thing, const DVector2 &pos, int dropoff, const secplane_t * onfloor, FCheckPosition &tm, bool missileCheck = false);
 bool	P_TryMove(AActor* thing, const DVector2 &pos, int dropoff, const secplane_t * onfloor = NULL, bool missilecheck = false);
 
-bool P_CheckMove(AActor *thing, const DVector2 &pos, FCheckPosition& tm, int flags);
-bool	P_CheckMove(AActor *thing, const DVector2 &pos, int flags = 0);
+bool P_CheckMove(AActor *thing, const DVector2 &pos, FCheckPosition& tm, ECheckMoveFlags flags);
+bool	P_CheckMove(AActor* thing, const DVector2& pos, ECheckMoveFlags flags = PCM_NONE);
 void	P_ApplyTorque(AActor *mo);
 
 bool	P_TeleportMove(AActor* thing, const DVector3 &pos, bool telefrag, bool modifyactor = true);	// [RH] Added z and telefrag parameters
@@ -285,7 +288,7 @@ bool	P_TalkFacing (AActor *player);
 void	P_UseLines (player_t* player);
 int	P_UsePuzzleItem (AActor *actor, int itemType);
 
-enum
+enum EFindFloorCeilingFlag
 {
 	FFCF_ONLYSPAWNPOS = 1,
 	FFCF_SAMESECTOR = 2,
@@ -297,6 +300,7 @@ enum
 	FFCF_RESTRICTEDPORTAL = 128,	// current values in the iterator's return are through a restricted portal type (i.e. some features are blocked.)
 	FFCF_NODROPOFF = 256,			// Caller does not need a dropoff (saves some time when checking portals)
 };
+using EFindFloorCeilingFlags = TFlags<EFindFloorCeilingFlag>;
 void	P_FindFloorCeiling (AActor *actor, int flags=0);
 
 bool	P_ChangeSector (sector_t* sector, int crunch, double amt, int floorOrCeil, bool isreset, bool instant = false);

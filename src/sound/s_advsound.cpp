@@ -1785,7 +1785,7 @@ DEFINE_ACTION_FUNCTION(AAmbientSound, Tick)
 		return 0;
 
 	FAmbientSound *ambient;
-	EChanFlags loop = 0;
+	EChanFlags loop = CHANF_NONE;
 
 	ambient = Ambients.CheckKey(self->args[0]);
 	if (ambient == NULL)
