@@ -78,19 +78,17 @@
 //
 //=============================================================================
 
-enum
+namespace AutoMap::Defaults
 {
-	AM_NUMMARKPOINTS = 10,
-};
+	static inline constexpr double PLAYERRADIUS = 16.;	// player radius for automap checking
+	static inline constexpr double M_ZOOMIN = 2; // how much zoom-in per second
+	static inline constexpr double M_ZOOMOUT = 0.2; // how much zoom-out per second
+	static inline constexpr double M_OLDZOOMIN = (1.02); // for am_zoom
+	static inline constexpr double M_OLDZOOMOUT = (1 / 1.02);
+	static inline constexpr uint8_t num_mark_points = 10;
+}
 
-// C++ cannot do static const floats in a class, so these need to be global...
-static const double PLAYERRADIUS = 16.;	// player radius for automap checking
-static const double M_ZOOMIN = 2; // how much zoom-in per second
-static const double M_ZOOMOUT = 0.2; // how much zoom-out per second
-static const double M_OLDZOOMIN = (1.02); // for am_zoom
-static const double M_OLDZOOMOUT = (1 / 1.02);
-
-static FTextureID marknums[AM_NUMMARKPOINTS]; // numbers used for marking by the automap
+static FTextureID marknums[AutoMap::Defaults::num_mark_points]; // numbers used for marking by the automap
 bool automapactive = false;
 
 //=============================================================================
@@ -336,24 +334,38 @@ CVAR (Color, am_ovportalcolor,			0x004022,	CVAR_ARCHIVE);
 
 struct AMColor
 {
-	uint32_t RGB;
+	uint32_t RGB = 0;
+
+	constexpr AMColor(int r, int g, int b) noexcept
+	{
+		RGB = MAKEARGB(255, r, g, b);
+	}
+
+	constexpr AMColor() = default;
+	constexpr AMColor(AMColor&& rhs) = default;
+	constexpr AMColor(const AMColor& rhs) = default;
+	constexpr AMColor(AMColor& rhs) = default;
+	~AMColor() = default;
+
+	AMColor& operator=(const AMColor&) = default;
+	AMColor& operator=(AMColor&) = default;
 
 	void FromCVar(FColorCVar & cv)
 	{
 		RGB = uint32_t(cv) | MAKEARGB(255, 0, 0, 0);
 	}
 
-	void FromRGB(int r,int g, int b)
+	constexpr void FromRGB(int r,int g, int b)
 	{
 		RGB = MAKEARGB(255, r, g, b);
 	}
 
-	void setInvalid()
+	constexpr void setInvalid()
 	{
 		RGB = 0;
 	}
 
-	bool isValid() const
+	constexpr bool isValid() const
 	{
 		return RGB != 0;
 	}
@@ -396,7 +408,7 @@ static const char *ColorNames[] = {
 
 struct AMColorset
 {
-	enum
+	enum EAMColor
 	{
 		Background, 
 		YourColor, 
@@ -426,10 +438,19 @@ struct AMColorset
 		AM_NUM_COLORS
 	};
 
-	AMColor c[AM_NUM_COLORS];
-	bool displayLocks;
-	bool forcebackground;
-	bool defined;	// only for mod specific colorsets: must be true to be usable
+	std::array<AMColor, AM_NUM_COLORS> c;
+	bool displayLocks = false;
+	bool forcebackground = false;
+	bool defined = false;	// only for mod specific colorsets: must be true to be usable
+
+	AMColorset() = default;
+	AMColorset(AMColorset&& rhs) = delete;
+	AMColorset(AMColorset& rhs) = default;
+	AMColorset(const AMColorset& rhs) = default;
+	~AMColorset() = default;
+
+	AMColorset& operator=(const AMColorset&) = default;
+	AMColorset& operator=(AMColorset&) = default;
 
 	void initFromCVars(FColorCVarRef **values)
 	{
@@ -456,19 +477,9 @@ struct AMColorset
 		forcebackground = false;
 	}
 
-	void initFromColors(const unsigned char *colors, bool showlocks)
+	void initFromColors(const std::array<AMColor, AM_NUM_COLORS> colors, bool showlocks)
 	{
-		for(int i=0, j=0; i<AM_NUM_COLORS; i++, j+=3)
-		{
-			if (colors[j] == 1 && colors[j+1] == 0 && colors[j+2] == 0)
-			{
-				c[i].setInvalid();
-			}
-			else
-			{
-				c[i].FromRGB(colors[j], colors[j+1], colors[j+2]);
-			}
-		}
+		c = colors;
 		displayLocks = showlocks;
 		forcebackground = false;
 	}
@@ -482,7 +493,7 @@ struct AMColorset
 		}
 	}
 
-	const AMColor &operator[](int index) const
+	const AMColor& operator[](int index) const
 	{
 		return c[index];
 	}
@@ -590,94 +601,98 @@ CCMD(am_restorecolors)
 }
 
 
+namespace AutoMap::Colors 
+{
+	static inline const AMColor not_used = AMColor(1,0,0);
 
-#define NOT_USED 1,0,0	// use almost black as indicator for an unused color
+	static inline const std::array<AMColor,AMColorset::EAMColor::AM_NUM_COLORS> DoomColors = 
+	{
+		AMColor(0x00,0x00,0x00), // background
+		AMColor(0xff,0xff,0xff), // yourcolor
+		AMColor(0xfc,0x00,0x00), // wallcolor
+		AMColor(0x80,0x80,0x80), // tswallcolor
+		AMColor(0xbc,0x78,0x48),	// fdwallcolor
+		AMColor(0xfc,0xfc,0x00), // cdwallcolor
+		AMColor(0xbc,0x78,0x48),	// efwallcolor
+		AMColor(0x74,0xfc,0x6c), // thingcolor
+		AMColor(0x74,0xfc,0x6c), // thingcolor_item
+		AMColor(0x74,0xfc,0x6c), // thingcolor_citem
+		AMColor(0x74,0xfc,0x6c), // thingcolor_monster
+		AMColor(0x74,0xfc,0x6c), // thingcolor_ncmonster
+		AMColor(0x74,0xfc,0x6c), // thingcolor_friend
+		not_used,		// specialwallcolor
+		not_used,		// secretwallcolor
+		AMColor(0x4c,0x4c,0x4c),	// gridcolor
+		AMColor(0x80,0x80,0x80), // xhaircolor
+		AMColor(0x6c,0x6c,0x6c),	// notseencolor
+		AMColor(0xfc,0xfc,0x00), // lockedcolor
+		not_used,		// intrateleport
+		not_used,		// interteleport
+		not_used,		// secretsector
+		not_used,		// unexploredsecretsector
+		AMColor(0x10,0x10,0x10),	// almostbackground
+		AMColor(0x40,0x40,0x40)	// portal
+	};
 
-static unsigned char DoomColors[]= {
-	0x00,0x00,0x00, // background
-	0xff,0xff,0xff, // yourcolor
-	0xfc,0x00,0x00, // wallcolor
-	0x80,0x80,0x80, // tswallcolor
-	0xbc,0x78,0x48,	// fdwallcolor
-	0xfc,0xfc,0x00, // cdwallcolor
-	0xbc,0x78,0x48,	// efwallcolor
-	0x74,0xfc,0x6c, // thingcolor
-	0x74,0xfc,0x6c, // thingcolor_item
-	0x74,0xfc,0x6c, // thingcolor_citem
-	0x74,0xfc,0x6c, // thingcolor_monster
-	0x74,0xfc,0x6c, // thingcolor_ncmonster
-	0x74,0xfc,0x6c, // thingcolor_friend
-	NOT_USED,		// specialwallcolor
-	NOT_USED,		// secretwallcolor
-	0x4c,0x4c,0x4c,	// gridcolor
-	0x80,0x80,0x80, // xhaircolor
-	0x6c,0x6c,0x6c,	// notseencolor
-	0xfc,0xfc,0x00, // lockedcolor
-	NOT_USED,		// intrateleport
-	NOT_USED,		// interteleport
-	NOT_USED,		// secretsector
-	NOT_USED,		// unexploredsecretsector
-	0x10,0x10,0x10,	// almostbackground
-	0x40,0x40,0x40	// portal
-};
+	static inline const std::array<AMColor, AMColorset::EAMColor::AM_NUM_COLORS> StrifeColors = {
+	AMColor(0x00,0x00,0x00), // background
+	AMColor(239, 239,   0),	// yourcolor
+	AMColor(199, 195, 195),	// wallcolor
+	AMColor(119, 115, 115),	// tswallcolor
+	AMColor( 55,  59,  91),	// fdwallcolor
+	AMColor(119, 115, 115),	// cdwallcolor
+	AMColor( 55,  59,  91),	// efwallcolor
+	AMColor(187,  59,   0),	// thingcolor
+	AMColor(219, 171,   0),	// thingcolor_item
+	AMColor(219, 171,   0),	// thingcolor_citem
+	AMColor(0xfc,0x00,0x00),	// thingcolor_monster
+	AMColor(0xfc,0x00,0x00),	// thingcolor_ncmonster
+	AMColor(0xfc,0x00,0x00), // thingcolor_friend
+	not_used,		// specialwallcolor
+	not_used,		// secretwallcolor
+	AMColor(0x4c,0x4c,0x4c),	// gridcolor
+	AMColor(0x80,0x80,0x80), // xhaircolor
+	AMColor(0x6c,0x6c,0x6c),	// notseencolor
+	AMColor(119, 115, 115),	// lockedcolor
+	not_used,		// intrateleport
+	not_used,		// interteleport
+	not_used,		// secretsector
+	not_used,		// unexploredsecretsector
+	AMColor(0x10,0x10,0x10),	// almostbackground
+	AMColor(0x40,0x40,0x40)	// portal
+	};
 
-static unsigned char StrifeColors[]= {
-	0x00,0x00,0x00, // background
-	239, 239,   0,	// yourcolor
-	199, 195, 195,	// wallcolor
-	119, 115, 115,	// tswallcolor
-	 55,  59,  91,	// fdwallcolor
-	119, 115, 115,	// cdwallcolor
-	 55,  59,  91,	// efwallcolor
-	187,  59,   0,	// thingcolor
-	219, 171,   0,	// thingcolor_item
-	219, 171,   0,	// thingcolor_citem
-	0xfc,0x00,0x00,	// thingcolor_monster
-	0xfc,0x00,0x00,	// thingcolor_ncmonster
-	0xfc,0x00,0x00, // thingcolor_friend
-	NOT_USED,		// specialwallcolor
-	NOT_USED,		// secretwallcolor
-	0x4c,0x4c,0x4c,	// gridcolor
-	0x80,0x80,0x80, // xhaircolor
-	0x6c,0x6c,0x6c,	// notseencolor
-	119, 115, 115,	// lockedcolor
-	NOT_USED,		// intrateleport
-	NOT_USED,		// interteleport
-	NOT_USED,		// secretsector
-	NOT_USED,		// unexploredsecretsector
-	0x10,0x10,0x10,	// almostbackground
-	0x40,0x40,0x40	// portal
-};
+	static inline const std::array<AMColor, AMColorset::EAMColor::AM_NUM_COLORS> RavenColors = {
+	AMColor(0x6c,0x54,0x40), // background
+	AMColor(0xff,0xff,0xff), // yourcolor
+	AMColor( 75,  50,  16),	// wallcolor
+	AMColor( 88,  93,  86),	// tswallcolor
+	AMColor(208, 176, 133),  // fdwallcolor
+	AMColor(103,  59,  31),	// cdwallcolor
+	AMColor(208, 176, 133),  // efwallcolor
+	AMColor(236, 236, 236),	// thingcolor
+	AMColor(236, 236, 236),	// thingcolor_item
+	AMColor(236, 236, 236),	// thingcolor_citem
+	AMColor(236, 236, 236),	// thingcolor_monster
+	AMColor(236, 236, 236),	// thingcolor_ncmonster
+	AMColor(236, 236, 236),	// thingcolor_friend
+	not_used,		// specialwallcolor
+	not_used,		// secretwallcolor
+	AMColor( 75,  50,  16),	// gridcolor
+	AMColor(0x00,0x00,0x00), // xhaircolor
+	AMColor(0x00,0x00,0x00),	// notseencolor
+	AMColor(103,  59,  31),	// lockedcolor
+	not_used,		// intrateleport
+	not_used,		// interteleport
+	not_used,		// secretsector
+	not_used,		// unexploredsecretsector
+	AMColor(0x10,0x10,0x10),	// almostbackground
+	AMColor(0x50,0x50,0x50)	// portal
+	};
+}
 
-static unsigned char RavenColors[]= {
-	0x6c,0x54,0x40, // background
-	0xff,0xff,0xff, // yourcolor
-	 75,  50,  16,	// wallcolor
-	 88,  93,  86,	// tswallcolor
-	208, 176, 133,  // fdwallcolor
-	103,  59,  31,	// cdwallcolor
-	208, 176, 133,  // efwallcolor
-	236, 236, 236,	// thingcolor
-	236, 236, 236,	// thingcolor_item
-	236, 236, 236,	// thingcolor_citem
-	236, 236, 236,	// thingcolor_monster
-	236, 236, 236,	// thingcolor_ncmonster
-	236, 236, 236,	// thingcolor_friend
-	NOT_USED,		// specialwallcolor
-	NOT_USED,		// secretwallcolor
-	 75,  50,  16,	// gridcolor
-	0x00,0x00,0x00, // xhaircolor
-	0x00,0x00,0x00,	// notseencolor
-	103,  59,  31,	// lockedcolor
-	NOT_USED,		// intrateleport
-	NOT_USED,		// interteleport
-	NOT_USED,		// secretsector
-	NOT_USED,		// unexploredsecretsector
-	0x10,0x10,0x10,	// almostbackground
-	0x50,0x50,0x50	// portal
-};
 
-#undef NOT_USED
+
 
 static AMColorset AMColors;
 static AMColorset AMMod;
@@ -702,7 +717,7 @@ static void AM_initColors(bool overlayed)
 	{
 		if (am_customcolors && AMModOverlay.defined)
 		{
-			AMColors = AMModOverlay;
+			AMColors = (AMModOverlay);
 		}
 		else
 		{
@@ -722,17 +737,17 @@ static void AM_initColors(bool overlayed)
 
 	case 1:	// Doom
 		// Use colors corresponding to the original Doom's
-		AMColors.initFromColors(DoomColors, false);
+		AMColors.initFromColors(AutoMap::Colors::DoomColors, false);
 		break;
 
 	case 2:	// Strife
 		// Use colors corresponding to the original Strife's
-		AMColors.initFromColors(StrifeColors, false);
+		AMColors.initFromColors(AutoMap::Colors::StrifeColors, false);
 		break;
 
 	case 3:	// Raven
 		// Use colors corresponding to the original Raven's
-		AMColors.initFromColors(RavenColors, true);
+		AMColors.initFromColors(AutoMap::Colors::RavenColors, true);
 		break;
 
 	}
@@ -767,15 +782,15 @@ void FMapInfoParser::ParseAMColors(bool overlay)
 			sc.MustGetToken(TK_StringConst);
 			if (sc.Compare("doom"))
 			{
-				cset.initFromColors(DoomColors, false);
+				cset.initFromColors(AutoMap::Colors::DoomColors, false);
 			}
 			else if (sc.Compare("raven"))
 			{
-				cset.initFromColors(RavenColors, true);
+				cset.initFromColors(AutoMap::Colors::RavenColors, true);
 			}
 			else if (sc.Compare("strife"))
 			{
-				cset.initFromColors(StrifeColors, false);
+				cset.initFromColors(AutoMap::Colors::StrifeColors, false);
 			}
 			else
 			{
@@ -844,7 +859,7 @@ static std::array<mline_t, 3> thintriangle_guy = { {
 
 static void AM_ParseArrow(TArray<mline_t> &Arrow, const char *lumpname)
 {
-	const int R = int((8 * PLAYERRADIUS) / 7);
+	const int R = int((8 * AutoMap::Defaults::PLAYERRADIUS) / 7);
 	FScanner sc;
 	int lump = fileSystem.CheckNumForFullName(lumpname, true);
 	if (lump >= 0)
@@ -889,7 +904,7 @@ void AM_StaticInit()
 
 	char namebuf[9];
 
-	for (int i = 0; i < AM_NUMMARKPOINTS; i++)
+	for (int i = 0; i < AutoMap::Defaults::num_mark_points; i++)
 	{
 		mysnprintf(namebuf, countof(namebuf), "AMMNUM%d", i);
 		marknums[i] = TexMan.CheckForTexture(namebuf, ETextureType::MiscPatch);
@@ -909,78 +924,77 @@ class DAutomap :public DAutomapBase
 {
 	DECLARE_CLASS(DAutomap, DAutomapBase)
 
-	enum
-	{
-		F_PANINC = 140 / TICRATE,	// how much the automap moves window per tic in frame-buffer coordinates moves 140 pixels at 320x200 in 1 second
-	};
+	static inline constexpr int F_PANINC = 140 / TICRATE;	// how much the automap moves window per tic in frame-buffer coordinates moves 140 pixels at 320x200 in 1 second
 
 	//FLevelLocals *Level;
 	// scale on entry
 	// used by MTOF to scale from map-to-frame-buffer coords
 	double scale_mtof = .2;
 	// used by FTOM to scale from frame-buffer-to-map coords (=1/scale_mtof)
-	double scale_ftom;
+	double scale_ftom = 0.2;
 
-	int bigstate;
-	int MapPortalGroup;
+	bool bigstate = false;
+	int MapPortalGroup = 0;
 
 	// Disable the ML_DONTDRAW line flag if x% of all lines in a map are flagged with it
 	// (To counter annoying mappers who think they are smart by making the automap unusable)
-	bool am_showallenabled;
+	bool am_showallenabled = false;
 
 	// location of window on screen
-	int	f_x;
-	int	f_y;
+	int	f_x = 0;
+	int	f_y = 0;
 
 	// size of window on screen
-	int	f_w;
-	int	f_h;
+	int	f_w = 0;
+	int	f_h = 0;
 
-	int	amclock;
+	int	amclock = 0;
 
-	mpoint_t	m_paninc;		// how far the window pans each tic (map coords)
-	double	mtof_zoommul;	// how far the window zooms in each tic (map coords)
+	mpoint_t	m_paninc = { 0.0, 0.0 };		// how far the window pans each tic (map coords)
+	double	mtof_zoommul = 0.0;	// how far the window zooms in each tic (map coords)
 
-	double	m_x, m_y;		// LL x,y where the window is on the map (map coords)
-	double	m_x2, m_y2;		// UR x,y where the window is on the map (map coords)
+	double m_x = 0.0;
+	double m_y = 0.0;		// LL x,y where the window is on the map (map coords)
+	double m_x2 = 0.0;
+	double m_y2 = 0.0;		// UR x,y where the window is on the map (map coords)
 
 	//
 	// width/height of window on map (map coords)
 	//
-	double	m_w;
-	double	m_h;
+	double	m_w = 0.0;
+	double	m_h = 0.0;
 
 	// based on level size
-	double	min_x, min_y, max_x, max_y;
+	double	min_x = 0.0, min_y = 0.0, max_x = 0.0, max_y = 0.0;
 
-	double	max_w; // max_x-min_x,
-	double	max_h; // max_y-min_y
+	double	max_w = 0.0; // max_x-min_x,
+	double	max_h = 0.0; // max_y-min_y
 
 	// based on player size
-	double	min_w;
-	double	min_h;
+	double	min_w = 0.0;
+	double	min_h = 0.0;
 
 
-	double	min_scale_mtof; // used to tell when to stop zooming out
-	double	max_scale_mtof; // used to tell when to stop zooming in
+	double	min_scale_mtof = 0.0; // used to tell when to stop zooming out
+	double	max_scale_mtof = 0.0; // used to tell when to stop zooming in
 
 	// old stuff for recovery later
-	double old_m_w, old_m_h;
-	double old_m_x, old_m_y;
+	double old_m_w = 0.0, old_m_h = 0.0;
+	double old_m_x = 0.0, old_m_y = 0.0;
 
 	// old location used by the Follower routine
-	mpoint_t f_oldloc;
+	mpoint_t f_oldloc = { 0.0, 0.0 };
 
-	mpoint_t markpoints[AM_NUMMARKPOINTS]; // where the points are
+	std::array<mpoint_t, AutoMap::Defaults::num_mark_points> markpoints = {}; // where the points are
 	int markpointnum = 0; // next point to be assigned
 
-	FTextureID mapback;	// the automap background
+	FTextureID mapback = nullptr;	// the automap background
 	double mapystart = 0; // y-value for the start of the map bitmap...used in the parallax stuff.
 	double mapxstart = 0; //x-value for the bitmap.
 
 	TArray<FVector2> points;
 
-	int line_thickness_scaled; // line thickness scaled to resolution
+	int line_thickness_scaled = 1; // line thickness scaled to resolution
 
 	// translates between frame-buffer and map distances
 	double FTOM(double x)
@@ -1007,7 +1021,7 @@ class DAutomap :public DAutomapBase
 	void calcMinMaxMtoF();
 
 	void DrawMarker(FGameTexture *tex, double x, double y, int yadjust,
-		INTBOOL flip, double xscale, double yscale, FTranslationID translation, double alpha, uint32_t fillcolor, FRenderStyle renderstyle);
+		bool flip, double xscale, double yscale, FTranslationID translation, double alpha, uint32_t fillcolor, FRenderStyle renderstyle);
 
 	void rotatePoint(double *x, double *y);
 	void rotate(double *x, double *y, DAngle an);
@@ -1157,7 +1171,7 @@ int DAutomap::addMark ()
 		auto m = markpointnum;
 		markpoints[markpointnum].x = m_x + m_w/2;
 		markpoints[markpointnum].y = m_y + m_h/2;
-		markpointnum = (markpointnum + 1) % AM_NUMMARKPOINTS;
+		markpointnum = (markpointnum + 1) % AutoMap::Defaults::num_mark_points;
 		return m;
 	}
 	return -1;
@@ -1191,8 +1205,8 @@ void DAutomap::findMinMaxBoundaries ()
 	max_w = max_x - min_x;
 	max_h = max_y - min_y;
 
-	min_w = 2*PLAYERRADIUS; // const? never changed?
-	min_h = 2*PLAYERRADIUS;
+	min_w = 2*AutoMap::Defaults::PLAYERRADIUS; // const? never changed?
+	min_h = 2*AutoMap::Defaults::PLAYERRADIUS;
 
 	calcMinMaxMtoF();
 }
@@ -1210,7 +1224,7 @@ void DAutomap::calcMinMaxMtoF()
 	double b = safe_frame * (StatusBar->GetTopOfStatusbar() / max_h);
 
 	min_scale_mtof = a < b ? a : b;
-	max_scale_mtof = twod->GetHeight() / (2*PLAYERRADIUS);
+	max_scale_mtof = twod->GetHeight() / (2*AutoMap::Defaults::PLAYERRADIUS);
 }
 
 //=============================================================================
@@ -1354,7 +1368,7 @@ void DAutomap::startDisplay()
 
 bool DAutomap::clearMarks ()
 {
-	for (int i = AM_NUMMARKPOINTS-1; i >= 0; i--)
+	for (int i = AutoMap::Defaults::num_mark_points -1; i >= 0; i--)
 		markpoints[i].x = -1; // means empty
 	markpointnum = 0;
 	return marknums[0].isValid();
@@ -1507,19 +1521,19 @@ void DAutomap::changeWindowScale (double delta)
 
 	if (am_zoomdir > 0)
 	{
-		mtof_zoommul = M_OLDZOOMIN * am_zoomdir;
+		mtof_zoommul = AutoMap::Defaults::M_OLDZOOMIN * am_zoomdir;
 	}
 	else if (am_zoomdir < 0)
 	{
-		mtof_zoommul = M_OLDZOOMOUT / -am_zoomdir;
+		mtof_zoommul = AutoMap::Defaults::M_OLDZOOMOUT / -am_zoomdir;
 	}
 	else if (buttonMap.ButtonDown(Button_AM_ZoomIn))
 	{
-		mtof_zoommul = (1 + (M_ZOOMIN - 1) * delta);
+		mtof_zoommul = (1 + (AutoMap::Defaults::M_ZOOMIN - 1) * delta);
 	}
 	else if (buttonMap.ButtonDown(Button_AM_ZoomOut))
 	{
-		mtof_zoommul = (1 + (M_ZOOMOUT - 1) * delta);
+		mtof_zoommul = (1 + (AutoMap::Defaults::M_ZOOMOUT - 1) * delta);
 	}
 	else
 	{
@@ -1856,8 +1870,8 @@ void DAutomap::drawMline (mline_t *ml, int colorindex)
 
 void DAutomap::drawGrid (int color)
 {
-	double x, y;
-	double start, end;
+	uint64_t x, y;
+	uint64_t start, end;
 	mline_t ml;
 	double minlen, extx, exty;
 	double minx, miny;
@@ -2844,10 +2858,9 @@ void DAutomap::drawPlayers ()
 
 	if (!multiplayer)
 	{
-		mline_t *arrow;
-		int numarrowlines;
+		mline_t* arrow = nullptr;
+		uint8_t numarrowlines = 0;
 
-		double vh = players[consoleplayer].viewheight;
 		DVector2 pos = players[consoleplayer].mo->InterpolatedPosition(r_viewpoint.TicFrac).XY();
 		pt.x = pos.X;
 		pt.y = pos.Y;
@@ -3123,7 +3136,7 @@ void DAutomap::drawThings ()
 //=============================================================================
 
 void DAutomap::DrawMarker (FGameTexture *tex, double x, double y, int yadjust,
-	INTBOOL flip, double xscale, double yscale, FTranslationID translation, double alpha, uint32_t fillcolor, FRenderStyle renderstyle)
+	bool flip, double xscale, double yscale, FTranslationID translation, double alpha, uint32_t fillcolor, FRenderStyle renderstyle)
 {
 	if (tex == nullptr || !tex->isValid())
 	{
@@ -3161,10 +3174,10 @@ void DAutomap::DrawMarker (FGameTexture *tex, double x, double y, int yadjust,
 
 void DAutomap::drawMarks ()
 {
-	FFont* font;
+	FFont* font = nullptr;
 	bool fontloaded = false;
 
-	for (int i = 0; i < AM_NUMMARKPOINTS; i++)
+	for (int i = 0; i < AutoMap::Defaults::num_mark_points; i++)
 	{
 		if (markpoints[i].x != -1)
 		{
@@ -3181,7 +3194,7 @@ void DAutomap::drawMarks ()
 			}
 			else
 			{
-				char numstr[2] = { char('0' + i), 0 };
+				std::string numstr = { char('0' + i), 0 };
 				double x = markpoints[i].x;
 				double y = markpoints[i].y;
 
@@ -3190,7 +3203,7 @@ void DAutomap::drawMarks ()
 					rotatePoint (&x, &y);
 				}
 
-				DrawText(twod, font, am_markcolor, CXMTOF(x), CYMTOF(y), numstr, TAG_DONE);
+				DrawText(twod, font, am_markcolor, CXMTOF(x), CYMTOF(y), numstr.c_str(), TAG_DONE);
 			}
 		}
 	}
@@ -3208,7 +3221,7 @@ void DAutomap::drawAuthorMarkers ()
 	// If args[0] is 0, then the actor's sprite is drawn at its own location.
 	// Otherwise, its sprite is drawn at the location of any actors whose TIDs match args[0].
 	auto it = Level->GetThinkerIterator<AActor>(NAME_MapMarker, STAT_MAPMARKER);
-	AActor *mark;
+	AActor* mark = nullptr;
 
 	while ((mark = it.Next()) != nullptr)
 	{
@@ -3217,9 +3230,9 @@ void DAutomap::drawAuthorMarkers ()
 			continue;
 		}
 
-		FTextureID picnum;
-		FGameTexture *tex;
-		uint16_t flip = 0;
+		FTextureID picnum = nullptr;
+		FGameTexture* tex = nullptr;
+		bool flip = false;
 
 		if (mark->picnum.isValid())
 		{
@@ -3248,7 +3261,7 @@ void DAutomap::drawAuthorMarkers ()
 			}
 		}
 		auto it = Level->GetActorIterator(mark->args[0]);
-		AActor *marked = mark->args[0] == 0 ? mark : it.Next();
+		AActor* marked = mark->args[0] == 0 ? mark : it.Next();
 
 		double xscale = mark->Scale.X;
 		double yscale = mark->Scale.Y;
@@ -3390,7 +3403,7 @@ void DAutomap::Serialize(FSerializer &arc)
 	// This only stores those variables which do not get set each time the automap is either activated or drawn.
 	// Especially the screen coordinates can not be brought over because the display settings may have changed.
 	arc("markpointnum", markpointnum)
-		.Array("markpoints", &markpoints[0].x, AM_NUMMARKPOINTS * 2)	// write as a double array.
+		.Array("markpoints", &markpoints[0].x, AutoMap::Defaults::num_mark_points * 2)	// write as a double array.
 		("scale_mtof", scale_mtof)
 		("scale_ftom", scale_ftom)
 		("bigstate", bigstate)
@@ -3437,7 +3450,7 @@ void DAutomap::UpdateShowAllLines()
 			total++;
 			if (line.flags & ML_DONTDRAW) flagged++;
 		}
-		am_showallenabled = (flagged * 100 / total >= val);
+		am_showallenabled = ((flagged * 100 / total) >= val);
 	}
 	else if (val == 0)
 	{
@@ -3458,7 +3471,9 @@ void DAutomap::GoBig()
 		minOutWindowScale();
 	}
 	else
+	{
 		restoreScaleAndLoc();
+	}
 }
 
 void DAutomap::ResetFollowLocation()
