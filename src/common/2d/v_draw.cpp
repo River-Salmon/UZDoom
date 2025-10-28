@@ -1715,7 +1715,7 @@ DEFINE_ACTION_FUNCTION(FCanvas, Clear)
 
 void DoDim(F2DDrawer *drawer, PalEntry color, float amount, int x1, int y1, int w, int h, FRenderStyle *style)
 {
-	if (amount < 0 || (amount == 0.f && *style != LegacyRenderStyles[STYLE_Source]))
+	if (amount < 0 || (amount == 0.f && (!style || *style != LegacyRenderStyles[STYLE_Source])))
 	{
 		return;
 	}
@@ -1846,9 +1846,9 @@ DEFINE_ACTION_FUNCTION(_Screen, GetTextureWidth)
 	PARAM_PROLOGUE;
 	PARAM_INT(textureId);
 	PARAM_BOOL(animated);
-	
+
 	FGameTexture *tex = textureId >= 1 ? TexMan.GetGameTexture(FSetTextureID(textureId), animated) : nullptr;
-	
+
 	ACTION_RETURN_FLOAT(tex ? tex->GetDisplayWidth() : -1);
 }
 
