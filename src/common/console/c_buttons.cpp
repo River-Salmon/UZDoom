@@ -276,11 +276,10 @@ void FButtonStatus::AddAxes (FString &btn_name, float joyaxes[NUM_AXIS_CODES])
 	FString cmd_name;
 	cmd_name = btn_name;
 
-	cmd_name.Insert(0, '+');
+	cmd_name = '+' + cmd_name;
 	TArray<int> positive_keys = Bindings.GetKeysForCommand(cmd_name);
 
-	cmd_name.Remove(0, 1);
-	cmd_name.Insert(0, '-');
+	cmd_name.LockBuffer()[0] = '-';
 	TArray<int> negative_keys = Bindings.GetKeysForCommand(cmd_name);
 
 	for (int i = 0; i < NUM_AXIS_CODES; i++)

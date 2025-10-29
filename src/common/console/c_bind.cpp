@@ -178,7 +178,7 @@ static int GetKeyFromName (const FString& name)
 	// Otherwise, we scan the KeyNames[] array for a matching name
 	for (i = 0; i < NUM_KEYS; i++)
 	{
-		if (KeyNames[i].Len() > 0 && (KeyNames[i] == name))
+		if (KeyNames[i].Len() > 0 && (KeyNames[i].IsEqualNoCase(name)))
 		{
 			return i;
 		}
@@ -477,7 +477,7 @@ TArray<int> FKeyBindings::GetKeysForCommand (const FString& cmd)
 
 	while (i < NUM_KEYS)
 	{
-		if (cmd == Binds[i])
+		if (cmd.IsEqualNoCase(Binds[i]))
 		{
 			result.Push(i);
 		}
@@ -498,7 +498,7 @@ void FKeyBindings::UnbindACommand (const FString& str)
 
 	for (i = 0; i < NUM_KEYS; i++)
 	{
-		if (!str.IsEqualNoCase(Binds[i]))
+		if (str.IsEqualNoCase(Binds[i]))
 		{
 			Binds[i] = "";
 		}
