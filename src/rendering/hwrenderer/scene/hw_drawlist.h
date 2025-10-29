@@ -1,6 +1,8 @@
 #pragma once
 
 #include "memarena.h"
+#include <vector>
+#include "hw_drawstructs.h"
 
 extern FMemArena RenderDataAllocator;
 void ResetRenderDataAllocator();
@@ -61,10 +63,10 @@ struct SortNode
 struct HWDrawList
 {
 	//private:
-	TArray<HWWall*> walls;
-	TArray<HWFlat*> flats;
-	TArray<HWSprite*> sprites;
-	TArray<HWDrawItem> drawitems;
+	std::vector<HWWall> walls;
+	std::vector<HWFlat> flats;
+	std::vector<HWSprite> sprites;
+	std::vector<HWDrawItem> drawitems;
 	int SortNodeStart;
     float SortZ;
 	SortNode * sorted;
@@ -85,7 +87,7 @@ public:
 	
 	unsigned int Size()
 	{
-		return drawitems.Size();
+		return drawitems.size();
 	}
 	
 	HWWall *NewWall();

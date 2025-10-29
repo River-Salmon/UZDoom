@@ -83,10 +83,10 @@ void HWDrawList::Reset()
 {
 	if (sorted) SortNodes.Release(SortNodeStart);
 	sorted=NULL;
-	walls.Clear();
-	flats.Clear();
-	sprites.Clear();
-	drawitems.Clear();
+	walls.clear();
+	flats.clear();
+	sprites.clear();
+	drawitems.clear();
 }
 
 //==========================================================================
@@ -167,13 +167,13 @@ void HWDrawList::MakeSortList()
 	SortNodeStart=SortNodes.Size();
 	p=NULL;
 	n=SortNodes.GetNew();
-	for(i=0;i<drawitems.Size();i++)
+	for(i=0;i<drawitems.size();i++)
 	{
 		n->itemindex=(int)i;
 		n->left=n->equal=n->right=NULL;
 		n->parent=p;
 		p=n;
-		if (i!=drawitems.Size()-1)
+		if (i!=drawitems.size()-1)
 		{
 			c=SortNodes.GetNew();
 			n->next=c;
@@ -219,7 +219,7 @@ SortNode * HWDrawList::FindSortWall(SortNode * head)
 		HWDrawItem * it = &drawitems[node->itemindex];
 		if (it->rendertype == DrawType_WALL)
 		{
-			float d = walls[it->index]->ViewDistance;
+			float d = walls[it->index].ViewDistance;
 			if (d > farthest) farthest = d;
 			if (d < nearest) nearest = d;
 		}
@@ -233,7 +233,7 @@ SortNode * HWDrawList::FindSortWall(SortNode * head)
 		HWDrawItem * it = &drawitems[node->itemindex];
 		if (it->rendertype == DrawType_WALL)
 		{
-			float di = fabsf(walls[it->index]->ViewDistance - farthest);
+			float di = fabsf(walls[it->index].ViewDistance - farthest);
 			if (!best || di < bestdist)
 			{
 				best = node;
@@ -252,8 +252,8 @@ SortNode * HWDrawList::FindSortWall(SortNode * head)
 //==========================================================================
 void HWDrawList::SortPlaneIntoPlane(SortNode * head,SortNode * sort)
 {
-	HWFlat * fh= flats[drawitems[head->itemindex].index];
-	HWFlat * fs= flats[drawitems[sort->itemindex].index];
+	HWFlat * fh= &flats[drawitems[head->itemindex].index];
+	HWFlat * fs= &flats[drawitems[sort->itemindex].index];
 
 	if (fh->z==fs->z) 
 		head->AddToEqual(sort);
@@ -271,8 +271,8 @@ void HWDrawList::SortPlaneIntoPlane(SortNode * head,SortNode * sort)
 //==========================================================================
 void HWDrawList::SortWallIntoPlane(HWDrawInfo* di, SortNode * head, SortNode * sort)
 {
-	HWFlat * fh = flats[drawitems[head->itemindex].index];
-	HWWall * ws = walls[drawitems[sort->itemindex].index];
+	HWFlat * fh = &flats[drawitems[head->itemindex].index];
+	HWWall * ws = &walls[drawitems[sort->itemindex].index];
 
 	bool ceiling = fh->z > SortZ;
 
@@ -311,7 +311,7 @@ void HWDrawList::SortWallIntoPlane(HWDrawInfo* di, SortNode * head, SortNode * s
 
 		SortNode * sort2 = SortNodes.GetNew();
 		memset(sort2, 0, sizeof(SortNode));
-		sort2->itemindex = drawitems.Size() - 1;
+		sort2->itemindex = drawitems.size() - 1;
 
 		head->AddToLeft(sort);
 		head->AddToRight(sort2);
@@ -334,8 +334,8 @@ void HWDrawList::SortWallIntoPlane(HWDrawInfo* di, SortNode * head, SortNode * s
 //==========================================================================
 void HWDrawList::SortSpriteIntoPlane(SortNode * head, SortNode * sort)
 {
-	HWFlat * fh = flats[drawitems[head->itemindex].index];
-	HWSprite * ss = sprites[drawitems[sort->itemindex].index];
+	HWFlat * fh = &flats[drawitems[head->itemindex].index];
+	HWSprite * ss = &sprites[drawitems[sort->itemindex].index];
 
 	bool ceiling = fh->z > SortZ;
 
@@ -368,7 +368,7 @@ void HWDrawList::SortSpriteIntoPlane(SortNode * head, SortNode * sort)
 
 		SortNode * sort2 = SortNodes.GetNew();
 		memset(sort2, 0, sizeof(SortNode));
-		sort2->itemindex = drawitems.Size() - 1;
+		sort2->itemindex = drawitems.size() - 1;
 
 		head->AddToLeft(sort);
 		head->AddToRight(sort2);
@@ -402,8 +402,8 @@ inline double CalcIntersectionVertex(HWWall *w1, HWWall * w2)
 
 void HWDrawList::SortWallIntoWall(HWDrawInfo *di, SortNode * head,SortNode * sort)
 {
-	HWWall * wh= walls[drawitems[head->itemindex].index];
-	HWWall * ws= walls[drawitems[sort->itemindex].index];
+	HWWall * wh= &walls[drawitems[head->itemindex].index];
+	HWWall * ws= &walls[drawitems[sort->itemindex].index];
 	float v1=wh->PointOnSide(ws->glseg.x1,ws->glseg.y1);
 	float v2=wh->PointOnSide(ws->glseg.x2,ws->glseg.y2);
 
@@ -457,7 +457,7 @@ void HWDrawList::SortWallIntoWall(HWDrawInfo *di, SortNode * head,SortNode * sor
 
 		SortNode * sort2=SortNodes.GetNew();
 		memset(sort2,0,sizeof(SortNode));
-		sort2->itemindex=drawitems.Size()-1;
+		sort2->itemindex=drawitems.size()-1;
 
 		if (v1>0)
 		{
@@ -494,8 +494,8 @@ inline double CalcIntersectionVertex(HWSprite *s, HWWall * w2)
 
 void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * sort)
 {
-	HWWall *wh= walls[drawitems[head->itemindex].index];
-	HWSprite * ss= sprites[drawitems[sort->itemindex].index];
+	HWWall* wh= &walls[drawitems[head->itemindex].index];
+	HWSprite* ss= &sprites[drawitems[sort->itemindex].index];
 
 	float v1 = wh->PointOnSide(ss->x1, ss->y1);
 	float v2 = wh->PointOnSide(ss->x2, ss->y2);
@@ -560,7 +560,7 @@ void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * s
 
 		SortNode * sort2=SortNodes.GetNew();
 		memset(sort2,0,sizeof(SortNode));
-		sort2->itemindex=drawitems.Size()-1;
+		sort2->itemindex=drawitems.size()-1;
 
 		if (v1>0)
 		{
@@ -594,8 +594,8 @@ void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * s
 
 inline int HWDrawList::CompareSprites(SortNode * a,SortNode * b)
 {
-	HWSprite * s1= sprites[drawitems[a->itemindex].index];
-	HWSprite * s2= sprites[drawitems[b->itemindex].index];
+	HWSprite * s1= &sprites[drawitems[a->itemindex].index];
+	HWSprite * s2= &sprites[drawitems[b->itemindex].index];
 
 	if (s1->depth < s2->depth) return 1;
 	if (s1->depth > s2->depth) return -1;
@@ -727,12 +727,12 @@ void HWDrawList::Sort(HWDrawInfo *di)
 
 void HWDrawList::SortWalls()
 {
-	if (drawitems.Size() > 1)
+	if (drawitems.size() > 1)
 	{
 		std::sort(drawitems.begin(), drawitems.end(), [=](const HWDrawItem &a, const HWDrawItem &b) -> bool
 		{
-			HWWall * w1 = walls[a.index];
-			HWWall * w2 = walls[b.index];
+			HWWall * w1 = &walls[a.index];
+			HWWall * w2 = &walls[b.index];
 
 			if (w1->texture != w2->texture) return w1->texture < w2->texture;
 			return (w1->flags & 3) < (w2->flags & 3);
@@ -743,12 +743,12 @@ void HWDrawList::SortWalls()
 
 void HWDrawList::SortFlats()
 {
-	if (drawitems.Size() > 1)
+	if (drawitems.size() > 1)
 	{
 		std::sort(drawitems.begin(), drawitems.end(), [=](const HWDrawItem &a, const HWDrawItem &b)
 		{
-			HWFlat * w1 = flats[a.index];
-			HWFlat* w2 = flats[b.index];
+			HWFlat * w1 = &flats[a.index];
+			HWFlat* w2 = &flats[b.index];
 			return w1->texture < w2->texture;
 		});
 	}
@@ -761,11 +761,16 @@ void HWDrawList::SortFlats()
 //
 //==========================================================================
 
-HWWall *HWDrawList::NewWall()
+HWWall* HWDrawList::NewWall()
 {
-	auto wall = (HWWall*)RenderDataAllocator.Alloc(sizeof(HWWall));
-	drawitems.Push(HWDrawItem(DrawType_WALL, walls.Push(wall)));
-	return wall;
+	//auto wall = (HWWall*)RenderDataAllocator.Alloc(sizeof(HWWall));
+	auto DrawItem = HWDrawItem();
+	DrawItem.rendertype = DrawType_WALL;
+	walls.emplace_back(HWWall());
+	const size_t Idx = walls.size() - 1;
+	DrawItem.index = Idx;
+	drawitems.push_back(std::move(DrawItem));
+	return &walls[Idx];
 }
 
 //==========================================================================
@@ -773,11 +778,16 @@ HWWall *HWDrawList::NewWall()
 //
 //
 //==========================================================================
-HWFlat *HWDrawList::NewFlat()
+HWFlat* HWDrawList::NewFlat()
 {
-	auto flat = (HWFlat*)RenderDataAllocator.Alloc(sizeof(HWFlat));
-	drawitems.Push(HWDrawItem(DrawType_FLAT,flats.Push(flat)));
-	return flat;
+	//auto flat = HWFlat();// (HWFlat*)RenderDataAllocator.Alloc(sizeof(HWFlat));
+	auto DrawItem = HWDrawItem();
+	DrawItem.rendertype = DrawType_FLAT;
+	flats.emplace_back(HWFlat());
+	const size_t Idx = flats.size() - 1;
+	DrawItem.index = Idx;
+	drawitems.push_back(DrawItem);
+	return &flats[Idx];
 }
 
 //==========================================================================
@@ -787,9 +797,16 @@ HWFlat *HWDrawList::NewFlat()
 //==========================================================================
 HWSprite *HWDrawList::NewSprite()
 {	
-	auto sprite = (HWSprite*)RenderDataAllocator.Alloc(sizeof(HWSprite));
-	drawitems.Push(HWDrawItem(DrawType_SPRITE, sprites.Push(sprite)));
-	return sprite;
+	//auto sprite = (HWSprite*)RenderDataAllocator.Alloc(sizeof(HWSprite));
+	//drawitems.Push(HWDrawItem(DrawType_SPRITE, sprites.Push(sprite)));
+	//return sprite;
+	auto DrawItem = HWDrawItem();
+	DrawItem.rendertype = DrawType_SPRITE;
+	sprites.emplace_back(HWSprite());
+	const size_t Idx = sprites.size() - 1;
+	DrawItem.index = Idx;
+	drawitems.push_back(DrawItem);
+	return &sprites[Idx];
 }
 
 //==========================================================================
@@ -803,7 +820,7 @@ void HWDrawList::DoDraw(HWDrawInfo *di, FRenderState &state, bool translucent, i
 	{
 	case DrawType_FLAT:
 		{
-			HWFlat * f= flats[drawitems[i].index];
+			HWFlat * f= &flats[drawitems[i].index];
 			RenderFlat.Clock();
 			f->DrawFlat(di, state, translucent);
 			RenderFlat.Unclock();
@@ -812,7 +829,7 @@ void HWDrawList::DoDraw(HWDrawInfo *di, FRenderState &state, bool translucent, i
 
 	case DrawType_WALL:
 		{
-			HWWall * w= walls[drawitems[i].index];
+			HWWall * w= &walls[drawitems[i].index];
 			HWWallDispatcher dis(di);
 			RenderWall.Clock();
 			w->DrawWall(&dis, state, translucent);
@@ -822,7 +839,7 @@ void HWDrawList::DoDraw(HWDrawInfo *di, FRenderState &state, bool translucent, i
 
 	case DrawType_SPRITE:
 		{
-			HWSprite * s= sprites[drawitems[i].index];
+			HWSprite * s= &sprites[drawitems[i].index];
 			RenderSprite.Clock();
 			s->DrawSprite(di, state, translucent);
 			RenderSprite.Unclock();
@@ -838,7 +855,7 @@ void HWDrawList::DoDraw(HWDrawInfo *di, FRenderState &state, bool translucent, i
 //==========================================================================
 void HWDrawList::Draw(HWDrawInfo *di, FRenderState &state, bool translucent)
 {
-	for (unsigned i = 0; i < drawitems.Size(); i++)
+	for (unsigned i = 0; i < drawitems.size(); i++)
 	{
 		DoDraw(di, state, translucent, i);
 	}
@@ -855,7 +872,7 @@ void HWDrawList::DrawWalls(HWDrawInfo *di, FRenderState &state, bool translucent
 	RenderWall.Clock();
 	for (auto &item : drawitems)
 	{
-		walls[item.index]->DrawWall(&dis, state, translucent);
+		walls[item.index].DrawWall(&dis, state, translucent);
 	}
 	RenderWall.Unclock();
 }
@@ -868,9 +885,9 @@ void HWDrawList::DrawWalls(HWDrawInfo *di, FRenderState &state, bool translucent
 void HWDrawList::DrawFlats(HWDrawInfo *di, FRenderState &state, bool translucent)
 {
 	RenderFlat.Clock();
-	for (unsigned i = 0; i<drawitems.Size(); i++)
+	for (unsigned i = 0; i<drawitems.size(); i++)
 	{
-		flats[drawitems[i].index]->DrawFlat(di, state, translucent);
+		flats[drawitems[i].index].DrawFlat(di, state, translucent);
 	}
 	RenderFlat.Unclock();
 }
@@ -890,7 +907,7 @@ void HWDrawList::DrawSorted(HWDrawInfo *di, FRenderState &state, SortNode * head
 
 	if (drawitems[head->itemindex].rendertype == DrawType_FLAT)
 	{
-		z = flats[drawitems[head->itemindex].index]->z;
+		z = flats[drawitems[head->itemindex].index].z;
 		relation = z > di->Viewpoint.Pos.Z ? 1 : -1;
 	}
 
@@ -942,7 +959,7 @@ void HWDrawList::DrawSorted(HWDrawInfo *di, FRenderState &state, SortNode * head
 //==========================================================================
 void HWDrawList::DrawSorted(HWDrawInfo *di, FRenderState &state)
 {
-	if (drawitems.Size() == 0) return;
+	if (drawitems.size() == 0) return;
 
 	if (!sorted)
 	{

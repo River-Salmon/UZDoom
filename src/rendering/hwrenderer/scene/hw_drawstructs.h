@@ -121,7 +121,7 @@ class HWWall;
 
 struct HWWallDispatcher;
 
-class HWWall
+class HWWall final
 {
 public:
 	static const char passflag[];
@@ -306,7 +306,7 @@ public:
 //
 //==========================================================================
 
-class HWFlat
+class HWFlat final
 {
 public:
 	sector_t * sector;
@@ -354,7 +354,7 @@ public:
 //==========================================================================
 
 
-class HWSprite
+class HWSprite final
 {
 public:
 	int lightlevel;
