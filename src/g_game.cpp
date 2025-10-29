@@ -4,6 +4,7 @@
 // Copyright 1999-2016 Randy Heit
 // Copyright 2002-2016 Christoph Oelckers
 // Copyright 2017-2025 GZDoom Maintainers and Contributors
+// Copyright 2025 UZDoom Maintainers and Contributors
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -118,9 +119,16 @@ CVAR (Bool, longsavemessages, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR (Bool, cl_waitforsave, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 CVAR (Bool, enablescriptscreenshot, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 CVAR (Bool, cl_restartondeath, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
+
 EXTERN_CVAR (Float, con_midtime);
-EXTERN_CVAR(Int, net_disablepause)
-EXTERN_CVAR(Bool, net_limitsaves)
+EXTERN_CVAR(Int, net_disablepause);
+EXTERN_CVAR(Bool, net_limitsaves);
+
+FARG(nodraw, "Debug", "Stops the game from drawing anything.", "",
+	"Causes ZDoom not to draw anything at all. Only useful with -timedemo.");
+FARG(noblit, "Debug", "Prevents the screen from updating.", "",
+	"Causes ZDoom not to update the display on the screen, but it still draws everything to an"
+	" internal buffer. Only useful with -timedemo.");
 
 //==========================================================================
 //
@@ -2012,6 +2020,7 @@ void C_SerializeCVars(FSerializer& arc, const char* label, uint32_t filter)
 
 void SetupLoadingCVars();
 void FinishLoadingCVars();
+bool CheckGZDoomSaveCompat(FString &engine, FString &software);
 
 void G_DoLoadGame ()
 {
@@ -2058,7 +2067,17 @@ void G_DoLoadGame ()
 	arc("Current Map", map);
 	arc("GameUUID", GameUUID);
 
+	#if LOAD_GZDOOM_4142_SAVES
+	FString software = arc.GetString("Software");
+	bool gzdoom_compat_ok = false;
+	if(engine.Compare("GZDOOM") == 0)
+	{
+		gzdoom_compat_ok = CheckGZDoomSaveCompat(engine, software);
+	}
+	if (engine.CompareNoCase(GAMESIG) != 0 && !gzdoom_compat_ok)
+	#else
 	if (engine.CompareNoCase(GAMESIG) != 0)
+	#endif
 	{
 		// Make a special case for the message printed for old savegames that don't
 		// have this information.
@@ -3006,8 +3025,8 @@ void G_DoPlayDemo (void)
 //
 void G_TimeDemo (const char* name)
 {
-	nodrawers = !!Args->CheckParm ("-nodraw");
-	noblit = !!Args->CheckParm ("-noblit");
+	nodrawers = !!Args->CheckParm (FArg_nodraw);
+	noblit = !!Args->CheckParm (FArg_noblit);
 	timingdemo = true;
 
 	defdemoname = name;
