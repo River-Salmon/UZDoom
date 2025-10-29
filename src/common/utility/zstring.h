@@ -345,6 +345,8 @@ public:
 	[[nodiscard]] bool IsEqualNoCase(const FString& other, size_t len) const { return strnicmp(Chars, other.Chars, len) == 0; }
 	[[nodiscard]] bool IsEqualNoCase(const char* other, size_t len) const { return strnicmp(Chars, other, len) == 0; }
 
+	[[nodiscard]] bool StartsWithNoCase(const FString& other) const { return strnicmp(Chars, other.Chars, other.Len()) == 0; }
+
 	enum EmptyTokenType
 	{
 		TOK_SKIPEMPTY = 0,

@@ -511,7 +511,7 @@ int FWeaponSlots::RestoreSlots(FConfigFile *config, const char *section)
 	}
 	while (config->NextInSection (key, value))
 	{
-		if (key == FString("Slot[") ||
+		if (key.StartsWithNoCase("Slot[") == 0 ||
 			key[5] < '0' ||
 			key[5] > '0'+NUM_WEAPON_SLOTS ||
 			key[6] != ']' ||

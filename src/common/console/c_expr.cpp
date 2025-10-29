@@ -601,7 +601,7 @@ FProduction *ProdNeqDbl (FDoubleProd *prod1, FDoubleProd *prod2)
 
 FProduction *ProdLTStr (FStringProd *prod1, FStringProd *prod2)
 {
-	return NewDoubleProd (stricmp (prod1->Value.GetChars(), prod2->Value.GetChars()) < 0);
+	return NewDoubleProd (prod1->Value.CompareNoCase( prod2->Value.GetChars()) < 0);
 }
 
 //==========================================================================

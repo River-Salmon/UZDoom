@@ -803,7 +803,7 @@ bool FConfigFile::WriteConfigFile () const
 		file->Printf ("[%s]\n", section->SectionName.GetChars());
 		while (entry != NULL)
 		{
-			if (strpbrk(entry->Value.GetChars(), "\r\n") == NULL)
+			if (entry->Value.IndexOfAny( "\r\n") == -1)
 			{ // Single-line value
 				file->Printf ("%s=%s\n", entry->Key.GetChars(), entry->Value.GetChars());
 			}
@@ -855,7 +855,7 @@ FString FConfigFile::GenerateEndTag(const FString& value)
 			EndTag[4+i*4+3] = Base64Table[rand_bytes[i*3+2] & 63];
 		}
 	}
-	while (strstr(value.GetChars(), EndTag) != NULL);
+	while (value.IndexOf(EndTag) != -1);
 	return EndTag;
 }
 
