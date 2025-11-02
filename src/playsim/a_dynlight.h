@@ -238,9 +238,9 @@ struct FDynamicLight
 	void Activate();
 
 	void SetActor(AActor *ac, bool isowned) { target = ac; owned = isowned; }
-	double X() const { return Pos.X; }
-	double Y() const { return Pos.Y; }
-	double Z() const { return Pos.Z; }
+	inline constexpr double X() const noexcept { return Pos.X; }
+	inline constexpr double Y() const noexcept { return Pos.Y; }
+	inline constexpr double Z() const noexcept { return Pos.Z; }
 
 	void Tick();
 	void UpdateLocation();
@@ -254,8 +254,13 @@ private:
 	void CollectWithinRadius(const DVector3 &pos, FSection *section, float radius);
 
 public:
-	FCycler m_cycler;
+	FDynamicLight* next, * prev;
 	DVector3 Pos;
+	float radius;			// The maximum size the light can be with its current settings.
+	float m_currentRadius;	// The current light size.
+	double lightDefIntensity;
+	const int* pArgs;
+	const LightFlags* pLightFlags;
 	DVector3 m_off;
 
 	// This date can either come from the owning actor or from a light definition
@@ -263,17 +268,13 @@ public:
 	const DAngle *pSpotInnerAngle;
 	const DAngle *pSpotOuterAngle;
 	const DAngle *pPitch;	// This is to handle pitch overrides through GLDEFS, it can either point to the target's pitch or the light definition.
-	const int *pArgs;
-	const LightFlags *pLightFlags;
 
 	double specialf1;
-	FDynamicLight *next, *prev;
+	
 	sector_t *Sector;
 	FLevelLocals *Level;
 	TObjPtr<AActor *> target;
 
-	float radius;			// The maximum size the light can be with its current settings.
-	float m_currentRadius;	// The current light size.
 	int m_tickCount;
 	int m_lastUpdate;
 	int mShadowmapIndex;
@@ -285,9 +286,11 @@ public:
 	bool swapped;
 	bool explicitpitch;
 
-	double lightDefIntensity;
+	
 
 	FDynamicLightTouchLists touchlists;
+
+	FCycler m_cycler;
 };
 
 

@@ -66,7 +66,7 @@
 #include "actorinlines.h"
 #include "memarena.h"
 
-static FMemArena DynLightArena(sizeof(FDynamicLight) * 200);
+static FMemArena DynLightArena(sizeof(FDynamicLight) * 2000);
 static TArray<FDynamicLight*> FreeList;
 static FCRandom randLight;
 

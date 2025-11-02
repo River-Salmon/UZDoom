@@ -123,43 +123,43 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FSec
 		out[2] = probe->Blue;
 	}
 
+	//player_t player = players[consoleplayer];
 	// Go through both light lists
-	if (Level->lightlists.flat_dlist.SSize() > sec->Index())
+	//if (Level->lightlists.flat_dlist.SSize() > sec->Index())
 	{
-		TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Iterator it(Level->lightlists.flat_dlist[sec->Index()]);
-		TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Pair *pair;
-		while (it.NextPair(pair))
+		FDynamicLight* light = Level->lights;
+		while (light = light->next)
 		{
-			auto node = pair->Value.get();
-			if (!node) continue;
+			if (!light) continue;
 
-			light=node->lightsource;
+			double dist = 0.0;
+			DVector3 L = DVector3(x - light->X(), y - light->Y(), z - light->Z());
+
+			dist = L.LengthSquared();
+			radius = light->GetRadius();
+			if (!light->visibletoplayer || dist > radius * radius)
+			{
+				continue;
+			}
+
+			//_mm_prefetch((const char*)light->next, 1);
+
 			if (light->ShouldLightActor(self))
 			{
-				float dist;
-				FVector3 L;
-
-				// This is a performance critical section of code where we cannot afford to let the compiler decide whether to inline the function or not.
-				// This will do the calculations explicitly rather than calling one of AActor's utility functions.
 				if (Level->Displacements.size > 0)
 				{
 					int fromgroup = light->Sector->PortalGroup;
 					int togroup = portalgroup;
-					if (fromgroup == togroup || fromgroup == 0 || togroup == 0) goto direct;
-
-					DVector2 offset = Level->Displacements.getOffset(fromgroup, togroup);
-					L = FVector3(x - (float)(light->X() + offset.X), y - (float)(light->Y() + offset.Y), z - (float)light->Z());
+					if (!bool(fromgroup == togroup | fromgroup == 0 | togroup == 0))
+					{
+						DVector2 offset = Level->Displacements.getOffset(fromgroup, togroup);
+						L = DVector3(x - (light->X() + offset.X), y - (light->Y() + offset.Y), z - light->Z());
+					}
 				}
-				else
-				{
-				direct:
-					L = FVector3(x - (float)light->X(), y - (float)light->Y(), z - (float)light->Z());
-				}
-
-				dist = (float)L.LengthSquared();
-				radius = light->GetRadius();
-
-				if (dist < radius * radius)
+				
+				dist = L.LengthSquared();
+				
+				//if (dist < radius * radius)
 				{
 					dist = sqrtf(dist);	// only calculate the square root if we really need it.
 

@@ -83,6 +83,7 @@ public:
 	TArray<PField *> Fields;
 	TArray<FName> SealedRestriction;
 	PClassType			*VMType = nullptr;
+	FMemArena Allocator;
 
 	void (*ConstructNative)(void *);
 

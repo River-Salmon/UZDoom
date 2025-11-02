@@ -353,6 +353,10 @@ void ClassReg::SetupClass(PClass *cls)
 	cls->Size = SizeOf;
 	cls->Pointers = Pointers;
 	cls->ConstructNative = ConstructNative;
+	//this may seem like a comically large number to preallocate space for,
+	//but it doesn't even really move the needle on total memory usage.
+	//in fact, on Nuts.wad, overall memory usage went *down*
+	cls->Allocator = FMemArena(SizeOf * 1280);
 }
 
 //==========================================================================
@@ -424,7 +428,7 @@ PClass *PClass::FindClass (FName zaname)
 
 DObject *PClass::CreateNew()
 {
-	uint8_t *mem = (uint8_t *)M_Malloc (Size);
+	uint8_t *mem = (uint8_t *)Allocator.Alloc(Size);
 	assert (mem != nullptr);
 
 	// Set this object's defaults before constructing it.
