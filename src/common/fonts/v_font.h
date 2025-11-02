@@ -117,6 +117,7 @@ public:
 	FName GetName() const { return FontName; }
 
 	static FFont *FindFont(FName fontname);
+	static void SetFontOverride(FName fontname, FFont* overridefont);
 
 	// Return width of string in pixels (unscaled)
 	int StringWidth (const uint8_t *str, int spacing = 0) const;
@@ -144,6 +145,7 @@ public:
 	virtual void RecordAllTextureColors(uint32_t *usedcolors);
 	void CheckCase();
 	void SetName(FName nm) { FontName = nm; }
+	static bool HasRemaps() { return FontRemaps.CountUsed() > 0; }
 
 	int GetDisplacement() const { return Displacement; }
 
@@ -205,6 +207,7 @@ protected:
 	FFont *Next;
 
 	static FFont *FirstFont;
+	static TMap<FName, FFont*> FontRemaps; //users can remap fonts
 	friend struct FontsDeleter;
 
 	friend void V_ClearFonts();

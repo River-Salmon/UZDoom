@@ -327,6 +327,8 @@ FARG(bots, "", "", "",
 FARG(debug, "", "", "",
 	"");
 
+FARG(moderntypeface, "", "", "", "");
+
 EXTERN_FARG(join);
 EXTERN_FARG(host);
 
@@ -3631,6 +3633,32 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	V_InitFonts();
 	InitDoomFonts();
 	V_LoadTranslations();
+	
+	const bool bModernTypeface = Args->CheckParm(FArg_moderntypeface);
+	if (bModernTypeface)
+	{
+		FFont* lexbigupper = V_GetFont("LexendBigUpper");
+		FFont* lexsmall = V_GetFont("LexendSmall");
+		if (lexbigupper)
+		{
+			FFont::SetFontOverride("OriginalBigFont", lexbigupper);
+			FFont::SetFontOverride("BigFont", lexbigupper);
+			FFont::SetFontOverride("AlternativeBigFont", lexbigupper);
+			FFont::SetFontOverride("BigUpper", lexbigupper);
+		}
+		if (lexsmall)
+		{
+			FFont::SetFontOverride("NewSmallFont", lexsmall);
+			FFont::SetFontOverride("NewSmallFont2", lexsmall);
+			FFont::SetFontOverride("SmallFont", lexsmall);
+		}
+		FFont* consolasHUD = V_GetFont("momotrustdisplay");
+		if (consolasHUD)
+		{
+			FFont::SetFontOverride("HUDFONT_DOOM", consolasHUD);
+		}
+	}
+
 	UpdateGenericUI(false);
 
 	// [CW] Parse any TEAMINFO lumps.

@@ -82,6 +82,7 @@ FFont* SmallFont, * SmallFont2, * BigFont, * BigUpper, * ConFont, * Intermission
 FFont *FFont::FirstFont = nullptr;
 int NumTextColors;
 static bool translationsLoaded;
+TMap<FName, FFont*> FFont::FontRemaps;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
@@ -90,6 +91,61 @@ TArray<TranslationMap> TranslationLookup;
 TArray<PalEntry> TranslationColors;
 
 // CODE --------------------------------------------------------------------
+
+FFont* CreateFontFromFile(const char* name, const char* fontlumpname)
+{
+	FFont* font = nullptr;
+	int lump = -1;
+	int folderfile = -1;
+
+	std::vector<FileSys::FolderEntry> folderdata;
+	FStringf path("fonts/%s/", name);
+
+	// Use a folder-based font only if it comes from a later file than the single lump version.
+	if (fileSystem.GetFilesInFolder(path.GetChars(), folderdata, true))
+	{
+		// This assumes that any custom font comes in one piece and not distributed across multiple resource files.
+		folderfile = fileSystem.GetFileContainer(folderdata[0].lumpnum);
+	}
+
+
+	lump = fileSystem.CheckNumForFullName(fontlumpname ? fontlumpname : name, true);
+
+	if (lump != -1 && fileSystem.GetFileContainer(lump) >= folderfile)
+	{
+		uint32_t head;
+		{
+			auto lumpy = fileSystem.OpenFileReader(lump);
+			lumpy.Read(&head, 4);
+		}
+		if ((head & MAKE_ID(255, 255, 255, 0)) == MAKE_ID('F', 'O', 'N', 0) ||
+			head == MAKE_ID(0xE1, 0xE6, 0xD5, 0x1A))
+		{
+			FFont* CreateSingleLumpFont(const char* fontname, int lump);
+			font = CreateSingleLumpFont(name, lump);
+			if (translationsLoaded) font->LoadTranslations();
+			return font;
+		}
+	}
+	FTextureID texid = TexMan.CheckForTexture(name, ETextureType::Any);
+	if (texid.isValid())
+	{
+		auto tex = TexMan.GetGameTexture(texid);
+		if (tex && tex->GetSourceLump() >= folderfile)
+		{
+			FFont* CreateSinglePicFont(const char* name);
+			font = CreateSinglePicFont(name);
+			return font;
+		}
+	}
+	if (folderdata.size() > 0)
+	{
+		font = new FFont(name, nullptr, name, 0, 0, 1, -1);
+		if (translationsLoaded) font->LoadTranslations();
+		return font;
+	}
+	return nullptr;
+}
 
 FFont *V_GetFont(const char *name, const char *fontlumpname)
 {
@@ -106,55 +162,7 @@ FFont *V_GetFont(const char *name, const char *fontlumpname)
 			if (font) return font;
 		}
 
-		int lump = -1;
-		int folderfile = -1;
-
-		std::vector<FileSys::FolderEntry> folderdata;
-		FStringf path("fonts/%s/", name);
-
-		// Use a folder-based font only if it comes from a later file than the single lump version.
-		if (fileSystem.GetFilesInFolder(path.GetChars(), folderdata, true))
-		{
-			// This assumes that any custom font comes in one piece and not distributed across multiple resource files.
-			folderfile = fileSystem.GetFileContainer(folderdata[0].lumpnum);
-		}
-
-
-		lump = fileSystem.CheckNumForFullName(fontlumpname? fontlumpname : name, true);
-
-		if (lump != -1 && fileSystem.GetFileContainer(lump) >= folderfile)
-		{
-			uint32_t head;
-			{
-				auto lumpy = fileSystem.OpenFileReader (lump);
-				lumpy.Read (&head, 4);
-			}
-			if ((head & MAKE_ID(255,255,255,0)) == MAKE_ID('F','O','N',0) ||
-				head == MAKE_ID(0xE1,0xE6,0xD5,0x1A))
-			{
-				FFont *CreateSingleLumpFont (const char *fontname, int lump);
-				font = CreateSingleLumpFont (name, lump);
-				if (translationsLoaded) font->LoadTranslations();
-				return font;
-			}
-		}
-		FTextureID texid = TexMan.CheckForTexture (name, ETextureType::Any);
-		if (texid.isValid())
-		{
-			auto tex = TexMan.GetGameTexture(texid);
-			if (tex && tex->GetSourceLump() >= folderfile)
-			{
-				FFont *CreateSinglePicFont(const char *name);
-				font =  CreateSinglePicFont (name);
-				return font;
-			}
-		}
-		if (folderdata.size() > 0)
-		{
-			font = new FFont(name, nullptr, name, 0, 0, 1, -1);
-			if (translationsLoaded) font->LoadTranslations();
-			return font;
-		}
+		return CreateFontFromFile(name, fontlumpname);
 	}
 	return font;
 }
@@ -933,6 +941,7 @@ void V_ClearFonts()
 		delete FFont::FirstFont;
 	}
 	FFont::FirstFont = nullptr;
+	FFont::FontRemaps.Clear();
 	AlternativeSmallFont = OriginalSmallFont = CurrentConsoleFont = NewSmallFont = NewConsoleFont = SmallFont = SmallFont2 = BigFont = ConFont = IntermissionFont = nullptr;
 	sheetBitmaps.Clear();
 }

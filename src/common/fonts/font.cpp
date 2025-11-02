@@ -567,6 +567,12 @@ FFont *FFont::FindFont (FName name)
 	{
 		return nullptr;
 	}
+
+	if (auto pFont = FontRemaps.CheckKey(name))
+	{
+		return *pFont;
+	}
+
 	FFont *font = FirstFont;
 
 	while (font != nullptr)
@@ -574,7 +580,39 @@ FFont *FFont::FindFont (FName name)
 		if (font->FontName == name) return font;
 		font = font->Next;
 	}
+
+	
+
 	return nullptr;
+}
+
+void FFont::SetFontOverride(FName fontname, FFont* overridefont)
+{
+	if (fontname == ConFont->FontName)
+	{
+		ConFont = overridefont;
+	}
+	else if (fontname == SmallFont->FontName)
+	{
+		SmallFont = overridefont;
+	}
+	else if (fontname == BigFont->FontName)
+	{
+		BigFont = overridefont;
+	}
+	else if (fontname == OriginalBigFont->FontName)
+	{
+		OriginalBigFont = overridefont;
+	}
+	else if (fontname == BigUpper->FontName)
+	{
+		BigUpper = overridefont;
+	}
+	else if (fontname == NewSmallFont->FontName)
+	{
+		NewSmallFont = overridefont;
+	}
+	FontRemaps.Insert(fontname, overridefont);
 }
 
 //==========================================================================
