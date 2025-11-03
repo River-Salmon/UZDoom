@@ -3637,25 +3637,25 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	const bool bModernTypeface = Args->CheckParm(FArg_moderntypeface);
 	if (bModernTypeface)
 	{
-		FFont* lexbigupper = V_GetFont("LexendBigUpper");
-		FFont* lexsmall = V_GetFont("LexendSmall");
-		if (lexbigupper)
+		FFont* modernbigupper = V_GetFont("ModernTypefaceBigUpper");
+		FFont* modernsmall = V_GetFont("ModernTypefaceSmall");
+		if (modernbigupper)
 		{
-			FFont::SetFontOverride("OriginalBigFont", lexbigupper);
-			FFont::SetFontOverride("BigFont", lexbigupper);
-			FFont::SetFontOverride("AlternativeBigFont", lexbigupper);
-			FFont::SetFontOverride("BigUpper", lexbigupper);
+			FFont::SetFontOverride("OriginalBigFont", modernbigupper);
+			FFont::SetFontOverride("BigFont", modernbigupper);
+			FFont::SetFontOverride("AlternativeBigFont", modernbigupper);
+			FFont::SetFontOverride("BigUpper", modernbigupper);
 		}
-		if (lexsmall)
+		if (modernsmall)
 		{
-			FFont::SetFontOverride("NewSmallFont", lexsmall);
-			FFont::SetFontOverride("NewSmallFont2", lexsmall);
-			FFont::SetFontOverride("SmallFont", lexsmall);
+			FFont::SetFontOverride("NewSmallFont", modernsmall);
+			FFont::SetFontOverride("NewSmallFont2", modernsmall);
+			FFont::SetFontOverride("SmallFont", modernsmall);
 		}
-		FFont* consolasHUD = V_GetFont("momotrustdisplay");
-		if (consolasHUD)
+		FFont* modernHUD = V_GetFont("ModernTypefaceHUD");
+		if (modernHUD)
 		{
-			FFont::SetFontOverride("HUDFONT_DOOM", consolasHUD);
+			FFont::SetFontOverride("HUDFONT_DOOM", modernHUD);
 		}
 	}
 
