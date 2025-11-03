@@ -1124,7 +1124,6 @@ void D_Display ()
 	cycles.Reset();
 	cycles.Clock();
 
-	r_UseVanillaTransparency = UseVanillaTransparency(); // [SP] Cache UseVanillaTransparency() call
 	r_renderercaps = GetCaps(); // [SP] Get the current capabilities of the renderer
 
 	if (players[consoleplayer].camera == NULL)
@@ -3765,9 +3764,6 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		}
 	}
 
-	// [SP] Force vanilla transparency auto-detection to re-detect our game lumps now
-	UpdateVanillaTransparency();
-
 	// [RH] Lock any cvars that should be locked now that we're
 	// about to begin the game.
 	FBaseCVar::EnableNoSet ();
@@ -4086,25 +4082,37 @@ static int D_DoomMain_Internal (void)
 		if (GameStartupInfo.DiscordAppId.GetChars())
 		{
 			const char* check = GameStartupInfo.DiscordAppId.GetChars();
-			uint32_t addr = 0;
-			while (check[addr])
+			uint32_t index = 0;
+			bool failedcheck = false;
+			while (!failedcheck && check[index])
 			{
-				if (check[addr] < '0' || check[addr] > '9')
-					I_FatalError("DiscordAppId must be a numerical value!\n");
-				addr++;
+				if (check[index] < '0' || check[index] > '9')
+				{
+					Printf(TEXTCOLOR_RED "DiscordAppId must be a numerical value!\n");
+					failedcheck = true;
+				}
+				index++;
 			}
+			if (failedcheck)
+				GameStartupInfo.DiscordAppId = "";
 		}
 
 		if (GameStartupInfo.SteamAppId.GetChars())
 		{
 			const char* check = GameStartupInfo.SteamAppId.GetChars();
-			uint32_t addr = 0;
-			while (check[addr])
+			uint32_t index = 0;
+			bool failedcheck = false;
+			while (!failedcheck && check[index])
 			{
-				if (check[addr] < '0' || check[addr] > '9')
-					I_FatalError("SteamAppId must be a numerical value!\n");
-				addr++;
+				if (check[index] < '0' || check[index] > '9')
+				{
+					Printf(TEXTCOLOR_RED "SteamAppId must be a numerical value!\n");
+					failedcheck = true;
+				}
+				index++;
 			}
+			if (failedcheck)
+				GameStartupInfo.SteamAppId = "";
 		}
 
 		int ret = D_InitGame(iwad_info, allwads, pwads);
