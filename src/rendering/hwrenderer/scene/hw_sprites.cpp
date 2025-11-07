@@ -821,7 +821,7 @@ void HWSprite::Process(HWDrawInfo *di, AActor* thing, sector_t * sector, area_t 
 
 	//compat trick: some old WADs put alpha values in decorate from 0-255 (ex: Pirate Doom). This accidentally "worked" in certain versions of GZDoom.
 	//only the harware renderer is reported to have this issue, so it is patched here.
-	if (alpha > 1.0)
+	if (alpha > 1.0 && di->Level->i_compatflags2 & COMPATF2_ALPHAWRAPAROUND)
 	{
 		alpha /= 255.;
 	}

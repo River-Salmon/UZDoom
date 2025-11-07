@@ -240,6 +240,7 @@ enum : unsigned int
 	COMPATF2_FDTELEPORT		= 1 << 16,	// Emulate Final Doom's teleporter z glitch.
 	COMPATF2_NOACSARGCHECK	= 1 << 17,	// Disable arg count checking for ACS
 	COMPATF2_NOVDOLLLOCKMSG = 1 << 18,	// Voodoo dolls no longer trigger lock messages
+	COMPATF2_ALPHAWRAPAROUND = 1 << 19,	// Alpha values > 1 are treated as a fraction of 255
 };
 
 // Emulate old bugs for select maps. These are not exposed by a cvar
