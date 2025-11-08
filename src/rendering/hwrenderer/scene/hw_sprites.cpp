@@ -615,7 +615,7 @@ inline void HWSprite::PutSprite(HWDrawInfo *di, bool translucent)
 	{
 		CreateVertices(di);
 	}
-	di->AddSprite(this, translucent);
+	di->AddSprite(*this, translucent);
 }
 
 //==========================================================================

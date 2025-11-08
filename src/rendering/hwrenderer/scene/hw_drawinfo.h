@@ -311,10 +311,10 @@ public:
 	void ProcessLowerMinisegs(TArray<seg_t *> &lowersegs);
     void AddSubsectorToPortal(FSectorPortalGroup *portal, subsector_t *sub);
     
-    void AddWall(HWWall *w);
+    void AddWall(const HWWall& w);
     void AddMirrorSurface(HWWall *w);
-	void AddFlat(HWFlat *flat, bool fog);
-	void AddSprite(HWSprite *sprite, bool translucent);
+	void AddFlat(const HWFlat& flat, bool fog);
+	void AddSprite(const HWSprite& sprite, bool translucent);
 
 
     HWDecal *AddDecal(bool onmirror);

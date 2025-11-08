@@ -67,7 +67,7 @@ struct HWWallDispatcher
 
 	void AddWall(HWWall* wal)
 	{
-		if (di) di->AddWall(wal);
+		if (di) di->AddWall(*wal);
 		else if (!(wal->flags & HWWall::HWF_TRANSLUCENT)) mh->list.Push(*wal);
 		else mh->translucent.Push(*wal);
 	}

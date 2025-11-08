@@ -37,19 +37,19 @@ EXTERN_CVAR(Bool, gl_seamless)
 //
 //==========================================================================
 
-void HWDrawInfo::AddWall(HWWall *wall)
+void HWDrawInfo::AddWall(const HWWall& wall)
 {
-	if (wall->flags & HWWall::HWF_TRANSLUCENT)
+	if (wall.flags & HWWall::HWF_TRANSLUCENT)
 	{
-		auto newwall = drawlists[GLDL_TRANSLUCENT].NewWall();
-		*newwall = *wall;
+		HWWall& newwall = drawlists[GLDL_TRANSLUCENT].NewWall();
+		newwall = wall;
 	}
 	else
 	{
-		bool masked = HWWall::passflag[wall->type] == 1 ? false : (wall->texture && wall->texture->isMasked());
+		bool masked = HWWall::passflag[wall.type] == 1 ? false : (wall.texture && wall.texture->isMasked());
 		int list;
 
-		if (wall->flags & HWWall::HWF_SKYHACK && wall->type == RENDERWALL_M2S)
+		if (wall.flags & HWWall::HWF_SKYHACK && wall.type == RENDERWALL_M2S)
 		{
 			list = GLDL_MASKEDWALLSOFS;
 		}
@@ -57,8 +57,8 @@ void HWDrawInfo::AddWall(HWWall *wall)
 		{
 			list = masked ? GLDL_MASKEDWALLS : GLDL_PLAINWALLS;
 		}
-		auto newwall = drawlists[list].NewWall();
-		*newwall = *wall;
+		HWWall& newwall = drawlists[list].NewWall();
+		newwall = wall;
 	}
 }
 
@@ -71,7 +71,7 @@ void HWDrawInfo::AddWall(HWWall *wall)
 void HWDrawInfo::AddMirrorSurface(HWWall *w)
 {
 	w->type = RENDERWALL_MIRRORSURFACE;
-	auto newwall = drawlists[GLDL_TRANSLUCENTBORDER].NewWall();
+	auto newwall = &drawlists[GLDL_TRANSLUCENTBORDER].NewWall();
 	*newwall = *w;
 
 	// Invalidate vertices to allow setting of texture coordinates
@@ -101,22 +101,22 @@ void HWDrawInfo::AddMirrorSurface(HWWall *w)
 //
 //==========================================================================
 
-void HWDrawInfo::AddFlat(HWFlat *flat, bool fog)
+void HWDrawInfo::AddFlat(const HWFlat& flat, bool fog)
 {
 	int list;
 
-	if (flat->renderstyle != STYLE_Translucent || flat->alpha < 1.f - FLT_EPSILON || fog || flat->texture == nullptr)
+	if (flat.renderstyle != STYLE_Translucent || flat.alpha < 1.f - FLT_EPSILON || fog || flat.texture == nullptr)
 	{
 		// translucent 3D floors go into the regular translucent list, translucent portals go into the translucent border list.
-		list = (flat->renderflags&SSRF_RENDER3DPLANES) ? GLDL_TRANSLUCENT : GLDL_TRANSLUCENTBORDER;
+		list = (flat.renderflags&SSRF_RENDER3DPLANES) ? GLDL_TRANSLUCENT : GLDL_TRANSLUCENTBORDER;
 	}
-	else if (flat->texture->GetTranslucency())
+	else if (flat.texture->GetTranslucency())
 	{
-		if (flat->stack)
+		if (flat.stack)
 		{
 			list = GLDL_TRANSLUCENTBORDER;
 		}
-		else if ((flat->renderflags&SSRF_RENDER3DPLANES) && !flat->plane.plane.isSlope())
+		else if ((flat.renderflags&SSRF_RENDER3DPLANES) && !flat.plane.plane.isSlope())
 		{
 			list = GLDL_TRANSLUCENT;
 		}
@@ -127,11 +127,11 @@ void HWDrawInfo::AddFlat(HWFlat *flat, bool fog)
 	}
 	else //if (flat->hacktype != SSRF_FLOODHACK) // The flood hack may later need different treatment but with the current setup can go into the existing render list.
 	{
-		bool masked = flat->texture->isMasked() && ((flat->renderflags&SSRF_RENDER3DPLANES) || flat->stack);
+		bool masked = flat.texture->isMasked() && ((flat.renderflags&SSRF_RENDER3DPLANES) || flat.stack);
 		list = masked ? GLDL_MASKEDFLATS : GLDL_PLAINFLATS;
 	}
-	auto newflat = drawlists[list].NewFlat();
-	*newflat = *flat;
+	auto& newflat = drawlists[list].NewFlat();
+	newflat = flat;
 }
 
 
@@ -140,11 +140,11 @@ void HWDrawInfo::AddFlat(HWFlat *flat, bool fog)
 // 
 //
 //==========================================================================
-void HWDrawInfo::AddSprite(HWSprite *sprite, bool translucent)
+void HWDrawInfo::AddSprite(const HWSprite& sprite, bool translucent)
 {
 	int list;
 	// [BB] Allow models to be drawn in the GLDL_TRANSLUCENT pass.
-	if (translucent || sprite->actor == nullptr || (!sprite->modelframe && (sprite->actor->renderflags & RF_SPRITETYPEMASK) != RF_WALLSPRITE))
+	if (translucent || sprite.actor == nullptr || (!sprite.modelframe && (sprite.actor->renderflags & RF_SPRITETYPEMASK) != RF_WALLSPRITE))
 	{
 		list = GLDL_TRANSLUCENT;
 	}
@@ -153,7 +153,7 @@ void HWDrawInfo::AddSprite(HWSprite *sprite, bool translucent)
 		list = GLDL_MODELS;
 	}
 
-	auto newsprt = drawlists[list].NewSprite();
-	*newsprt = *sprite;
+	auto& newsprt = drawlists[list].NewSprite();
+	newsprt = sprite;
 }
 

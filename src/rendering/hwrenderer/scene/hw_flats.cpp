@@ -408,7 +408,7 @@ inline void HWFlat::PutFlat(HWDrawInfo *di, bool fog)
 			SetupLights(di, lightdata, sector->PortalGroup);
 		}
 	}
-	di->AddFlat(this, fog);
+	di->AddFlat(*this, fog);
 }
 
 //==========================================================================
