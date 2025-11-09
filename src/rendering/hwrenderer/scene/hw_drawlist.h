@@ -90,8 +90,8 @@ public:
 	}
 	
 	[[nodiscard]] HWWall& NewWall() noexcept;
-	HWFlat& NewFlat();
-	HWSprite& NewSprite();
+	[[nodiscard]] HWFlat& NewFlat() noexcept;
+	[[nodiscard]] HWSprite& NewSprite() noexcept;
 	void Reset();
 	void SortWalls();
 	void SortFlats();

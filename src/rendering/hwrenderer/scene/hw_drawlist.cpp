@@ -334,35 +334,35 @@ void HWDrawList::SortWallIntoPlane(HWDrawInfo* di, SortNode * head, SortNode * s
 //==========================================================================
 void HWDrawList::SortSpriteIntoPlane(SortNode * head, SortNode * sort)
 {
-	HWFlat * fh = &flats[drawitems[head->itemindex].index];
-	HWSprite * ss = &sprites[drawitems[sort->itemindex].index];
+	const HWFlat& fh = flats[drawitems[head->itemindex].index];
+	HWSprite& ss = sprites[drawitems[sort->itemindex].index];
 
-	bool ceiling = fh->z > SortZ;
+	bool ceiling = fh.z > SortZ;
 
-	auto hiz = ss->z1 > ss->z2 ? ss->z1 : ss->z2;
-	auto loz = ss->z1 < ss->z2 ? ss->z1 : ss->z2;
+	auto hiz = ss.z1 > ss.z2 ? ss.z1 : ss.z2;
+	auto loz = ss.z1 < ss.z2 ? ss.z1 : ss.z2;
 
-	if ((hiz > fh->z && loz < fh->z) || ss->modelframe)
+	if ((hiz > fh.z && loz < fh.z) || ss.modelframe)
 	{
 		// We have to split this sprite
-		HWSprite *s = &NewSprite();
-		*s = *ss;
+		HWSprite& s = NewSprite();
+		s = ss;
 
 		// Splitting is done in the shader with clip planes, if available.
 		// The fallback here only really works for non-y-billboarded sprites.
 		if (screen->hwcaps & RFL_NO_CLIP_PLANES)
 		{
-			float newtexv = ss->vt + ((ss->vb - ss->vt) / (ss->z2 - ss->z1))*(fh->z - ss->z1);
+			float newtexv = ss.vt + ((ss.vb - ss.vt) / (ss.z2 - ss.z1))*(fh.z - ss.z1);
 
 			if (!ceiling)
 			{
-				ss->z1 = s->z2 = fh->z;
-				ss->vt = s->vb = newtexv;
+				ss.z1 = s.z2 = fh.z;
+				ss.vt = s.vb = newtexv;
 			}
 			else
 			{
-				s->z1 = ss->z2 = fh->z;
-				s->vt = ss->vb = newtexv;
+				s.z1 = ss.z2 = fh.z;
+				s.vt = ss.vb = newtexv;
 			}
 		}
 
@@ -373,7 +373,7 @@ void HWDrawList::SortSpriteIntoPlane(SortNode * head, SortNode * sort)
 		head->AddToLeft(sort);
 		head->AddToRight(sort2);
 	}
-	else if ((ss->z2<fh->z && !ceiling) || (ss->z1>fh->z && ceiling))	// completely on the left side
+	else if ((ss.z2<fh.z && !ceiling) || (ss.z1>fh.z && ceiling))	// completely on the left side
 	{
 		head->AddToLeft(sort);
 	}
@@ -402,18 +402,18 @@ inline double CalcIntersectionVertex(HWWall *w1, HWWall * w2)
 
 void HWDrawList::SortWallIntoWall(HWDrawInfo *di, SortNode * head,SortNode * sort)
 {
-	HWWall * wh= &walls[drawitems[head->itemindex].index];
-	HWWall * ws= &walls[drawitems[sort->itemindex].index];
-	float v1=wh->PointOnSide(ws->glseg.x1,ws->glseg.y1);
-	float v2=wh->PointOnSide(ws->glseg.x2,ws->glseg.y2);
+	HWWall& wh = walls[drawitems[head->itemindex].index];
+	HWWall& ws = walls[drawitems[sort->itemindex].index];
+	float v1=wh.PointOnSide(ws.glseg.x1, ws.glseg.y1);
+	float v2=wh.PointOnSide(ws.glseg.x2, ws.glseg.y2);
 
 	if (fabs(v1)<MIN_EQ && fabs(v2)<MIN_EQ) 
 	{
-		if (ws->type==RENDERWALL_FOGBOUNDARY && wh->type!=RENDERWALL_FOGBOUNDARY) 
+		if (ws.type==RENDERWALL_FOGBOUNDARY && wh.type!=RENDERWALL_FOGBOUNDARY) 
 		{
 			head->AddToRight(sort);
 		}
-		else if (ws->type!=RENDERWALL_FOGBOUNDARY && wh->type==RENDERWALL_FOGBOUNDARY) 
+		else if (ws.type!=RENDERWALL_FOGBOUNDARY && wh.type==RENDERWALL_FOGBOUNDARY) 
 		{
 			head->AddToLeft(sort);
 		}
@@ -432,28 +432,28 @@ void HWDrawList::SortWallIntoWall(HWDrawInfo *di, SortNode * head,SortNode * sor
 	}
 	else
 	{
-		double r = CalcIntersectionVertex(ws, wh);
+		double r = CalcIntersectionVertex(&ws, &wh);
 
-		float ix=(float)(ws->glseg.x1+r*(ws->glseg.x2-ws->glseg.x1));
-		float iy=(float)(ws->glseg.y1+r*(ws->glseg.y2-ws->glseg.y1));
-		float iu=(float)(ws->tcs[HWWall::UPLFT].u + r * (ws->tcs[HWWall::UPRGT].u - ws->tcs[HWWall::UPLFT].u));
-		float ilmu=(float)(ws->lightuv[HWWall::UPLFT].u + r * (ws->lightuv[HWWall::UPRGT].u - ws->lightuv[HWWall::UPLFT].u));
-		float izt=(float)(ws->ztop[0]+r*(ws->ztop[1]-ws->ztop[0]));
-		float izb=(float)(ws->zbottom[0]+r*(ws->zbottom[1]-ws->zbottom[0]));
+		float ix=(float)(ws.glseg.x1+r*(ws.glseg.x2-ws.glseg.x1));
+		float iy=(float)(ws.glseg.y1+r*(ws.glseg.y2-ws.glseg.y1));
+		float iu=(float)(ws.tcs[HWWall::UPLFT].u + r * (ws.tcs[HWWall::UPRGT].u - ws.tcs[HWWall::UPLFT].u));
+		float ilmu=(float)(ws.lightuv[HWWall::UPLFT].u + r * (ws.lightuv[HWWall::UPRGT].u - ws.lightuv[HWWall::UPLFT].u));
+		float izt=(float)(ws.ztop[0]+r*(ws.ztop[1]-ws.ztop[0]));
+		float izb=(float)(ws.zbottom[0]+r*(ws.zbottom[1]-ws.zbottom[0]));
 
-		ws->vertcount = 0;	// invalidate current vertices.
-		HWWall *w= &NewWall();
-		*w = *ws;
+		ws.vertcount = 0;	// invalidate current vertices.
+		HWWall& w = NewWall();
+		w = ws;
 
-		w->glseg.x1=ws->glseg.x2=ix;
-		w->glseg.y1=ws->glseg.y2=iy;
-		w->glseg.fracleft = ws->glseg.fracright = ws->glseg.fracleft + r*(ws->glseg.fracright - ws->glseg.fracleft);
-		w->ztop[0]=ws->ztop[1]=izt;
-		w->zbottom[0]=ws->zbottom[1]=izb;
-		w->tcs[HWWall::LOLFT].u = w->tcs[HWWall::UPLFT].u = ws->tcs[HWWall::LORGT].u = ws->tcs[HWWall::UPRGT].u = iu;
-		w->lightuv[HWWall::LOLFT].u = w->lightuv[HWWall::UPLFT].u = ws->lightuv[HWWall::LORGT].u = ws->lightuv[HWWall::UPRGT].u = iu;
-		ws->MakeVertices(false);
-		w->MakeVertices(false);
+		w.glseg.x1=ws.glseg.x2=ix;
+		w.glseg.y1=ws.glseg.y2=iy;
+		w.glseg.fracleft = ws.glseg.fracright = ws.glseg.fracleft + r*(ws.glseg.fracright - ws.glseg.fracleft);
+		w.ztop[0]=ws.ztop[1]=izt;
+		w.zbottom[0]=ws.zbottom[1]=izb;
+		w.tcs[HWWall::LOLFT].u = w.tcs[HWWall::UPLFT].u = ws.tcs[HWWall::LORGT].u = ws.tcs[HWWall::UPRGT].u = iu;
+		w.lightuv[HWWall::LOLFT].u = w.lightuv[HWWall::UPLFT].u = ws.lightuv[HWWall::LORGT].u = ws.lightuv[HWWall::UPRGT].u = iu;
+		ws.MakeVertices(false);
+		w.MakeVertices(false);
 
 		SortNode * sort2=SortNodes.GetNew();
 		memset(sort2,0,sizeof(SortNode));
@@ -494,15 +494,15 @@ inline double CalcIntersectionVertex(HWSprite *s, HWWall * w2)
 
 void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * sort)
 {
-	HWWall *wh= &walls[drawitems[head->itemindex].index];
-	HWSprite * ss= &sprites[drawitems[sort->itemindex].index];
+	HWWall& wh = walls[drawitems[head->itemindex].index];
+	HWSprite& ss= sprites[drawitems[sort->itemindex].index];
 
-	float v1 = wh->PointOnSide(ss->x1, ss->y1);
-	float v2 = wh->PointOnSide(ss->x2, ss->y2);
+	float v1 = wh.PointOnSide(ss.x1, ss.y1);
+	float v2 = wh.PointOnSide(ss.x2, ss.y2);
 
 	if (fabs(v1)<MIN_EQ && fabs(v2)<MIN_EQ) 
 	{
-		if (wh->type==RENDERWALL_FOGBOUNDARY) 
+		if (wh.type==RENDERWALL_FOGBOUNDARY) 
 		{
 			head->AddToLeft(sort);
 		}
@@ -521,20 +521,20 @@ void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * s
 	}
 	else
 	{
-		const bool drawWithXYBillboard = ((ss->particle && gl_billboard_particles) || (!(ss->actor && ss->actor->renderflags & RF_FORCEYBILLBOARD)
-			&& (gl_billboard_mode == 1 || (ss->actor && ss->actor->renderflags & RF_FORCEXYBILLBOARD))));
+		const bool drawWithXYBillboard = ((ss.particle && gl_billboard_particles) || (!(ss.actor && ss.actor->renderflags & RF_FORCEYBILLBOARD)
+			&& (gl_billboard_mode == 1 || (ss.actor && ss.actor->renderflags & RF_FORCEXYBILLBOARD))));
 
 		const bool drawBillboardFacingCamera = hw_force_cambbpref ? gl_billboard_faces_camera :
-			(gl_billboard_faces_camera && (ss->actor && !(ss->actor->renderflags2 & RF2_BILLBOARDNOFACECAMERA)))
-			|| (ss->actor && ss->actor->renderflags2 & RF2_BILLBOARDFACECAMERA);
+			(gl_billboard_faces_camera && (ss.actor && !(ss.actor->renderflags2 & RF2_BILLBOARDNOFACECAMERA)))
+			|| (ss.actor && ss.actor->renderflags2 & RF2_BILLBOARDFACECAMERA);
 
 		// [Nash] has +ROLLSPRITE
-		const bool rotated = (ss->actor != nullptr && ss->actor->renderflags & (RF_ROLLSPRITE | RF_WALLSPRITE | RF_FLATSPRITE));
+		const bool rotated = (ss.actor != nullptr && ss.actor->renderflags & (RF_ROLLSPRITE | RF_WALLSPRITE | RF_FLATSPRITE));
 
 		// cannot sort them at the moment. This requires more complex splitting.
 		if (drawWithXYBillboard || drawBillboardFacingCamera || rotated)
 		{
-			float v1 = wh->PointOnSide(ss->x, ss->y);
+			float v1 = wh.PointOnSide(ss.x, ss.y);
 			if (v1 < 0)
 			{
 				head->AddToLeft(sort);
@@ -545,18 +545,18 @@ void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * s
 			}
 			return;
 		}
-		double r=CalcIntersectionVertex(ss, wh);
+		double r=CalcIntersectionVertex(&ss, &wh);
 
-		float ix=(float)(ss->x1 + r * (ss->x2-ss->x1));
-		float iy=(float)(ss->y1 + r * (ss->y2-ss->y1));
-		float iu=(float)(ss->ul + r * (ss->ur-ss->ul));
+		float ix=(float)(ss.x1 + r * (ss.x2 - ss.x1));
+		float iy=(float)(ss.y1 + r * (ss.y2 - ss.y1));
+		float iu=(float)(ss.ul + r * (ss.ur - ss.ul));
 
-		HWSprite *s = &NewSprite();
-		*s = *ss;
+		HWSprite& s = NewSprite();
+		s = ss;
 
-		s->x1=ss->x2=ix;
-		s->y1=ss->y2=iy;
-		s->ul=ss->ur=iu;
+		s.x1 = ss.x2 = ix;
+		s.y1 = ss.y2 = iy;
+		s.ul = ss.ur = iu;
 
 		SortNode * sort2=SortNodes.GetNew();
 		memset(sort2,0,sizeof(SortNode));
@@ -574,12 +574,12 @@ void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * s
 		}
 		if (screen->BuffersArePersistent())
 		{
-			s->vertexindex = ss->vertexindex = -1;
+			s.vertexindex = ss.vertexindex = -1;
 		}
 		else
 		{
-			s->CreateVertices(di);
-			ss->CreateVertices(di);
+			s.CreateVertices(di);
+			ss.CreateVertices(di);
 		}
 
 	}
@@ -594,12 +594,12 @@ void HWDrawList::SortSpriteIntoWall(HWDrawInfo *di, SortNode * head,SortNode * s
 
 inline int HWDrawList::CompareSprites(SortNode * a,SortNode * b)
 {
-	HWSprite * s1= &sprites[drawitems[a->itemindex].index];
-	HWSprite * s2= &sprites[drawitems[b->itemindex].index];
+	const HWSprite& s1 = sprites[drawitems[a->itemindex].index];
+	const HWSprite& s2 = sprites[drawitems[b->itemindex].index];
 
-	if (s1->depth < s2->depth) return 1;
-	if (s1->depth > s2->depth) return -1;
-	return reverseSort? s2->index-s1->index : s1->index-s2->index;
+	if (s1.depth < s2.depth) return 1;
+	if (s1.depth > s2.depth) return -1;
+	return reverseSort? s2.index - s1.index : s1.index - s2.index;
 }
 
 //==========================================================================
@@ -731,11 +731,11 @@ void HWDrawList::SortWalls()
 	{
 		std::sort(drawitems.begin(), drawitems.end(), [=](const HWDrawItem &a, const HWDrawItem &b) -> bool
 		{
-			HWWall * w1 = &walls[a.index];
-			HWWall * w2 = &walls[b.index];
+			const HWWall& w1 = walls[a.index];
+			const HWWall& w2 = walls[b.index];
 						  
-			if (w1->texture != w2->texture) return w1->texture < w2->texture;
-			return (w1->flags & 3) < (w2->flags & 3);
+			if (w1.texture != w2.texture) return w1.texture < w2.texture;
+			return (w1.flags & 3) < (w2.flags & 3);
 
 		});
 	}
@@ -747,52 +747,31 @@ void HWDrawList::SortFlats()
 	{
 		std::sort(drawitems.begin(), drawitems.end(), [=](const HWDrawItem &a, const HWDrawItem &b)
 		{
-			HWFlat * w1 = &flats[a.index];
-			HWFlat* w2 = &flats[b.index];
-			return w1->texture < w2->texture;
+			const HWFlat& w1 = flats[a.index];
+			const HWFlat& w2 = flats[b.index];
+			return w1.texture < w2.texture;
 		});
 	}
 }
 
-
-//==========================================================================
-//
-//
-//
-//==========================================================================
-
 HWWall& HWDrawList::NewWall() noexcept
 {
-	//auto wall = (HWWall*)RenderDataAllocator.Alloc(sizeof(HWWall));
 	auto&& wall = HWWall();
 	auto idx = walls.Push(std::move(wall));
 	drawitems.Push(HWDrawItem(DrawType_WALL, idx));
-	//drawitems.
 	return walls[idx];
 }
 
-//==========================================================================
-//
-//
-//
-//==========================================================================
-HWFlat& HWDrawList::NewFlat()
+HWFlat& HWDrawList::NewFlat() noexcept
 {
-	//auto flat = (HWFlat*)RenderDataAllocator.Alloc(sizeof(HWFlat));
 	auto&& flat = HWFlat();
 	auto idx = flats.Push(std::move(flat));
 	drawitems.Push(HWDrawItem(DrawType_FLAT,idx));
 	return flats[idx];
 }
 
-//==========================================================================
-//
-//
-//
-//==========================================================================
-HWSprite& HWDrawList::NewSprite()
+HWSprite& HWDrawList::NewSprite() noexcept
 {	
-	//auto sprite = (HWSprite*)RenderDataAllocator.Alloc(sizeof(HWSprite));
 	auto&& sprite = HWSprite();
 	auto idx = sprites.Push(std::move(sprite));
 	drawitems.Push(HWDrawItem(DrawType_SPRITE, idx));
@@ -810,28 +789,28 @@ void HWDrawList::DoDraw(HWDrawInfo *di, FRenderState &state, bool translucent, i
 	{
 	case DrawType_FLAT:
 		{
-			HWFlat * f= &flats[drawitems[i].index];
+			HWFlat& f = flats[drawitems[i].index];
 			RenderFlat.Clock();
-			f->DrawFlat(di, state, translucent);
+			f.DrawFlat(di, state, translucent);
 			RenderFlat.Unclock();
 		}
 		break;
 
 	case DrawType_WALL:
 		{
-			HWWall * w= &walls[drawitems[i].index];
+			HWWall& w = walls[drawitems[i].index];
 			HWWallDispatcher dis(di);
 			RenderWall.Clock();
-			w->DrawWall(&dis, state, translucent);
+			w.DrawWall(&dis, state, translucent);
 			RenderWall.Unclock();
 		}
 		break;
 
 	case DrawType_SPRITE:
 		{
-			HWSprite * s= &sprites[drawitems[i].index];
+			HWSprite& s = sprites[drawitems[i].index];
 			RenderSprite.Clock();
-			s->DrawSprite(di, state, translucent);
+			s.DrawSprite(di, state, translucent);
 			RenderSprite.Unclock();
 		}
 		break;
