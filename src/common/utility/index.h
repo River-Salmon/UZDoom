@@ -9,49 +9,27 @@
 #undef max
 #undef min
 
-enum struct EIndexState : uint8_t
-{
-	Uninitialized,
-	Invalid,
-	Plausible //we don't actually know if it's truly a valid index unless it's linked to a specific container
-};
-
-enum struct EIndexCompatibility : uint8_t
-{
-	ExactContainer, //Index is initialized with a specific Container and is only applicable to that specific container instance.
-	MatchingType //Index is applicable to any container with a matching type.
-};
-
-
 //We can "tag" indices with the type of the thing in the Container they are an index for.
 //We can also enforce proper semantics, exceptions etc for behavior related to indices instead of using raw ints.
-template<typename T, EIndexCompatibility Compat = EIndexCompatibility::ExactContainer>
+template<typename T>
 struct TIndex
 {
-	EIndexState state = EIndexState::Uninitialized;
 	size_t idx = 0;
 	const TArray<T>  *pContainer = nullptr; 
 	
 	constexpr explicit TIndex(const TArray<T>& Container, const size_t NewIdx) noexcept
 	{
 		idx   = NewIdx;
-		state = EIndexState::Plausible;
 		pContainer = &Container;
 	}
 
 	template<typename O>
-	constexpr TIndex<T> FromOther(const TArray<O> &OtherContainer, const size_t NewIdx)
+	constexpr TIndex<O> MatchingIndexInOtherContainer(TArray<O> &OtherContainer)
 	{
-		static_assert(Compat == EIndexCompatibility::MatchingType);
-
-		if (pContainer && OtherContainer.IsValidIndex(NewIdx) && pContainer->IsValidIndex(NewIdx))
-		{
-			return TIndex<T>(*pContainer, NewIdx);
-		}
-		else
-		{
-			return TIndex<T>{EIndexState::Invalid, 0, nullptr};
-		}
+		assert(OtherContainer.IsValidIndex(idx));
+		assert(pContainer);
+		assert(pContainer->IsValidIndex(idx));
+		return TIndex<O>(OtherContainer, idx);
 	}
 
 	//for when you've already checked if the index is valid.
@@ -92,7 +70,7 @@ struct TIndex
 	template<typename IntType>
 	[[nodiscard]] constexpr IntType ConvertWithNarrowingCheck() const
 	{
-		if (state == EIndexState::Plausible)
+		if (IsValid())
 		{
 			if (idx > (std::numeric_limits<IntType>::max()))
 			{
@@ -101,15 +79,7 @@ struct TIndex
 			}
 			else if (pContainer)
 			{
-				if (pContainer->IsValidIndex(idx))
-				{
-					return static_cast<IntType>(idx);
-				}
-				else
-				{
-					throw std::runtime_error("retreived index for container was out of bounds");
-					return 0;
-				}
+				return static_cast<IntType>(idx);
 			}
 		}
 		throw std::runtime_error("Invalid or uninitialized Index retreived.");
@@ -119,6 +89,11 @@ struct TIndex
 	void operator++(int)
 	{
 		idx++;
+	}
+
+	void operator--(int)
+	{
+		idx--;
 	}
 
 	[[nodiscard]] bool operator>(const TIndex<T> &rhs) const
@@ -136,12 +111,7 @@ struct TIndex
 		return idx == rhs.AsUnsigned();
 	}
 
-	TIndex()
-	{
-		idx = 0;
-		state = EIndexState::Uninitialized;
-	}
-
+	TIndex()                        = default;
 	TIndex(const TIndex&)			= default;
 	TIndex(TIndex&&)				= default;
 	TIndex(TIndex&)					= default;
