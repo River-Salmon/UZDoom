@@ -701,7 +701,8 @@ void FGameConfigFile::DoGlobalSetup ()
 					var->SetGenericRep(v, CVAR_Int);
 				}
 			}
-			if (last < 226)
+			if (last < 226 // GZDoom 4.14.2
+				|| last == 228) // UZDoom 4.14.3 (227 was used in a bunch of 5.0 dev builds)
 			{
 				// We can't handle key config yet, because
 				// the files aren't fully loaded. Just queue
