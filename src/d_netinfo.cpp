@@ -418,7 +418,12 @@ void D_SetupUserInfo ()
 			{
 			// Some cvars don't copy their original value directly.
 			case NAME_Team:			coninfo->TeamChanged(team); break;
-			case NAME_Skin:			coninfo->SkinChanged(skin, players[consoleplayer].CurrentPlayerClass); break;
+			case NAME_Skin:
+			{
+				coninfo->SkinChanged(FString(skin), TIndex<FPlayerClass>(PlayerClasses, players[consoleplayer].CurrentPlayerClass));
+				break;
+			}
+				
 			case NAME_Gender:		coninfo->GenderChanged(gender); break;
 			case NAME_PlayerClass:	coninfo->PlayerClassChanged(playerclass); break;
 			// The rest do.
@@ -493,16 +498,20 @@ int userinfo_t::TeamChanged(int team)
 	return team;
 }
 
-int userinfo_t::SkinChanged(const char *skinname, int playerclass)
+TIndex<FPlayerSkin> userinfo_t::SkinChanged(const FString skinname, TIndex<FPlayerClass> playerclass)
 {
-	int skinnum = R_FindSkin(skinname, playerclass);
-	*static_cast<FIntCVar *>((*this)[NAME_Skin]) = skinnum;
+	auto skinnum = R_FindSkin(skinname, playerclass);
+	auto&cvar = GetNode(NAME_Skin)->Pair.Value;
+	auto&IntCVar = dynamic_cast<FIntCVar &>(*cvar);
+	IntCVar       = skinnum.AsUnsigned();
 	return skinnum;
 }
 
-int userinfo_t::SkinNumChanged(int skinnum)
+TIndex<FPlayerSkin> userinfo_t::SkinNumChanged(TIndex<FPlayerSkin> skinnum)
 {
-	*static_cast<FIntCVar *>((*this)[NAME_Skin]) = skinnum;
+	auto &cvar    = GetNode(NAME_Skin)->Pair.Value;
+	auto &IntCVar = dynamic_cast<FIntCVar &>(*cvar);
+	IntCVar       = skinnum.AsUnsigned();
 	return skinnum;
 }
 
@@ -887,7 +896,7 @@ void D_ReadUserInfoStrings (int pnum, TArrayView<uint8_t>& stream, bool update)
 				break;
 
 			case NAME_Skin:
-				info->SkinChanged(value.GetChars(), players[pnum].CurrentPlayerClass);
+				info->SkinChanged(value.GetChars(), TIndex<FPlayerClass>(PlayerClasses, players[pnum].CurrentPlayerClass));
 				if (players[pnum].mo != NULL)
 				{
 					if (players[pnum].cls != NULL &&

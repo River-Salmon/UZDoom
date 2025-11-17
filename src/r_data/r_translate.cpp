@@ -677,7 +677,7 @@ DEFINE_ACTION_FUNCTION(_Translation, SetPlayerTranslation)
 
 	if (cls != nullptr)
 	{
-		PlayerSkin = R_FindSkin(Skins[PlayerSkin].Name.GetChars(), int(cls - &PlayerClasses[0]));
+		PlayerSkin = R_FindSkin(Skins[PlayerSkin].Name.GetChars(), TIndex<FPlayerClass>(PlayerClasses, int(cls - &PlayerClasses[0]))).AsUnsigned();
 		FRemapTable remap;
 		R_GetPlayerTranslation(PlayerColor, GetColorSet(cls->Type, PlayerColorset),
 			&Skins[PlayerSkin], &remap);

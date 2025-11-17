@@ -395,8 +395,10 @@ static void GroupLinePortals(FLevelLocals *Level)
 	Level->linePortalSpans.Clear();
 	TArray<int> tempindex;
 
-	tempindex.Reserve(Level->linePortals.Size());
-	memset(&tempindex[0], -1, Level->linePortals.Size() * sizeof(int));
+	if (tempindex.Reserve(Level->linePortals.Size()) > 0)
+	{
+		memset(&tempindex[0], -1, Level->linePortals.Size() * sizeof(int));
+	}
 
 	for (unsigned i = 0; i < Level->linePortals.Size(); i++)
 	{

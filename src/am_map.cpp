@@ -70,6 +70,7 @@
 #include "c_buttons.h"
 #include "d_buttons.h"
 #include "texturemanager.h"
+#include "index.h"
 
 
 //=============================================================================
@@ -2222,16 +2223,17 @@ void DAutomap::drawSubsectors()
 			if (sub->flags & SSECF_HOLE && sub->numlines > 3)
 			{
 				using Point = std::pair<double, double>;
-				std::vector<std::vector<Point>> polygon;
-				std::vector<Point> *curPoly;
+				std::vector<TArray<Point>> polygon;
+				TArray<Point>* curPoly = nullptr;
 
 				polygon.resize(1);
 				curPoly = &polygon.back();
 				curPoly->resize(points.Size());
 
-				for (unsigned i = 0; i < points.Size(); i++)
+				for (auto i = TIndex<FVector2>(points, 0); i.IsValid(); i++)
 				{
-					(*curPoly)[i] = { points[i].X, points[i].Y };
+					auto p = TIndex<Point>(*curPoly, i.AsUnsigned());
+					p.GetMutableUnsafe() = Point(i.GetUnsafe().X, i.GetUnsafe().Y);
 				}
 				indices = mapbox::earcut(polygon);
 			}

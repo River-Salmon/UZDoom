@@ -986,8 +986,10 @@ void OpenALSoundRenderer::SetSfxVolume(float volume)
 void OpenALSoundRenderer::SetMusicVolume(float volume)
 {
 	MusicVolume = volume;
-	for(uint32_t i = 0;i < Streams.Size();++i)
-		Streams[i]->UpdateVolume();
+	for (auto &s : Streams)
+	{
+		s->UpdateVolume();
+	}
 }
 
 unsigned int OpenALSoundRenderer::GetMSLength(SoundHandle sfx)

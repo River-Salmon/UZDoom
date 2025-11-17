@@ -297,7 +297,10 @@ FString C_NameKeys (int *keys, int count, bool colors)
 	for (int i = 0; i < count; i++)
 	{
 		int key = keys[i];
-		if (key == 0) continue;
+		if (key == 0)
+		{
+			continue;
+		}
 		for (int j = 0; j < i; j++)
 		{
 			if (key == keys[j])

@@ -105,7 +105,7 @@ class DThinker : public DObject
 public:
 	static const int DEFAULT_STAT = STAT_DEFAULT;
 	void OnDestroy () override;
-	virtual ~DThinker ();
+	virtual ~DThinker () override;
 	virtual void Tick ();
 	void CallTick();
 	virtual void PostBeginPlay ();	// Called just before the first tick

@@ -793,6 +793,10 @@ void S_ParseSndSeq (int levellump)
 
 static void AddSequence (int curseq, FName seqname, FName slot, int stopsound, const TArray<uint32_t> &ScriptTemp)
 {
+	if (ScriptTemp.size() == 0)
+	{
+		return;
+	}
 	Sequences[curseq] = (FSoundSequence *)M_Malloc (sizeof(FSoundSequence) + sizeof(uint32_t)*ScriptTemp.Size());
 	Sequences[curseq]->SeqName = seqname;
 	Sequences[curseq]->Slot = slot;

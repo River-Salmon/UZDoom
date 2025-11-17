@@ -508,11 +508,11 @@ bool MapLoader::LoadGLSubsectors(FileReader &lump)
 	{
 		for(unsigned j=0;j<sub.numlines;j++)
 		{
-			seg_t * seg = sub.firstline + j;
+			seg_t* const seg = sub.firstline + j;
 			if (seg->linedef==nullptr) seg->frontsector = seg->backsector = sub.firstline->frontsector;
 		}
-		seg_t *firstseg = sub.firstline;
-		seg_t *lastseg = sub.firstline + sub.numlines - 1;
+		const seg_t* const firstseg = sub.firstline;
+		const seg_t* const lastseg = sub.firstline + sub.numlines - 1;
 		// The subsector must be closed. If it isn't we can't use these nodes and have to do a rebuild.
 		if (lastseg->v2 != firstseg->v1)
 		{

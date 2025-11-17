@@ -48,6 +48,7 @@
 
 //Added by MC:
 #include "b_bot.h"
+#include "index.h"
 
 class player_t;
 
@@ -288,11 +289,11 @@ struct userinfo_t : TMap<FName,FBaseCVar *>
 
 	void Reset(int pnum);
 	int TeamChanged(int team);
-	int SkinChanged(const char *skinname, int playerclass);
-	int SkinNumChanged(int skinnum);
+	TIndex<class FPlayerSkin> SkinChanged(const FString skinname, TIndex<class FPlayerClass> playerclass);
+	TIndex<class FPlayerSkin> SkinNumChanged(TIndex<class FPlayerSkin> skinnum);
 	int GenderChanged(const char *gendername);
 	int PlayerClassChanged(const char *classname);
-		uint32_t ColorChanged(const char *colorname);
+	uint32_t ColorChanged(const char *colorname);
 	uint32_t ColorChanged(uint32_t colorval);
 	int ColorSetChanged(int setnum);
 };

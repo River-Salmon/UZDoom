@@ -34,6 +34,8 @@
 #include "voxels.h"
 #include "vm.h"
 #include "texturemanager.h"
+#include <array>
+#include "index.h"
 
 void InitModels();
 void R_InitVoxels();
@@ -105,7 +107,7 @@ FTextureID spritedef_t::GetSpriteFrame(int frame, int rot, DAngle ang, bool *mir
 // [RH] Removed checks for coexistance of rotation 0 with other
 //		rotations and made it look more like BOOM's version.
 //
-static bool R_InstallSpriteLump (FTextureID lump, unsigned frame, char rot, bool flipped, spriteframewithrotate *sprtemp, int &maxframe)
+static bool R_InstallSpriteLump (FTextureID lump, unsigned frame, char rot, bool flipped, std::array<spriteframewithrotate, MAX_SPRITE_FRAMES>& sprtemp, int &maxframe)
 {
 	unsigned rotation;
 
@@ -178,7 +180,7 @@ static bool R_InstallSpriteLump (FTextureID lump, unsigned frame, char rot, bool
 
 
 // [RH] Seperated out of R_InitSpriteDefs()
-void R_InstallSprite (int num, spriteframewithrotate *sprtemp, int &maxframe)
+void R_InstallSprite (int num, std::array<spriteframewithrotate, MAX_SPRITE_FRAMES>& sprtemp, int &maxframe)
 {
 	int frame;
 	int framestart;
@@ -326,7 +328,7 @@ void R_InitSpriteDefs ()
 	unsigned int i, j, smax, vmax;
 	uint32_t intname;
 
-	spriteframewithrotate sprtemp[MAX_SPRITE_FRAMES];
+	std::array<spriteframewithrotate, MAX_SPRITE_FRAMES> sprtemp;
 
 	// Create a hash table to speed up the process
 	smax = TexMan.NumTextures();
@@ -400,7 +402,7 @@ void R_InitSpriteDefs ()
 	// scan all the lump names for each of the names, noting the highest frame letter.
 	for (i = 0; i < sprites.Size(); ++i)
 	{
-		memset (sprtemp, 0xFF, sizeof(sprtemp));
+		memset (sprtemp.data(), 0xFF, sizeof(sprtemp));
 		for (j = 0; j < MAX_SPRITE_FRAMES; ++j)
 		{
 			sprtemp[j].Flip = 0;
@@ -566,7 +568,7 @@ void R_InitSkins (void)
 {
 	FSoundID playersoundrefs[NUMSKINSOUNDS];
 	spritedef_t temp;
-	int sndlumps[NUMSKINSOUNDS];
+	std::array<int, NUMSKINSOUNDS> sndlumps;
 	char key[65];
 	uint32_t intname, crouchname;
 	unsigned i;
@@ -818,12 +820,12 @@ void R_InitSkins (void)
 
 			for(int spr = 0; spr<2; spr++)
 			{
-				spriteframewithrotate sprtemp[MAX_SPRITE_FRAMES];
-				memset (sprtemp, 0xFFFF, sizeof(sprtemp));
-				for (k = 0; k < MAX_SPRITE_FRAMES; ++k)
+				std::array<spriteframewithrotate, MAX_SPRITE_FRAMES> sprtemp;
+				memset (sprtemp.data(), 0xFFFF, sizeof(sprtemp));
+				for (auto& k : sprtemp)
 				{
-					sprtemp[k].Flip = 0;
-					sprtemp[k].Voxel = NULL;
+					k.Flip = 0;
+					k.Voxel = NULL;
 				}
 				int maxframe = -1;
 
@@ -885,12 +887,13 @@ void R_InitSkins (void)
 		aliasid = NO_SOUND;
 		for (j = 0; j < NUMSKINSOUNDS; j++)
 		{
-			if (sndlumps[j] != -1)
+			const auto &lump = sndlumps[j];
+			if (lump != -1)
 			{
-				if (j == 0 || sndlumps[j] != sndlumps[j-1])
+				if (j == 0 || lump != sndlumps[j-1])
 				{
 					aliasid = S_AddPlayerSound (Skins[i].Name.GetChars(), Skins[i].gender,
-						playersoundrefs[j], sndlumps[j], true);
+						playersoundrefs[j], lump, true);
 				}
 				else
 				{
@@ -915,24 +918,30 @@ void R_InitSkins (void)
 }
 
 // [RH] Find a skin by name
-int R_FindSkin (const char *name, int pclass)
+TIndex<FPlayerSkin> R_FindSkin (const FString name, TIndex<FPlayerClass> pclass)
 {
-	if (stricmp ("base", name) == 0)
+	if (name.CompareNoCase("base") == 0)
 	{
-		return pclass;
+		return pclass.MatchingIndexInOtherContainer<FPlayerSkin>(Skins);
 	}
 
-	for (unsigned i = PlayerClasses.Size(); i < Skins.Size(); i++)
+	for (auto i = TIndex<FPlayerSkin>(Skins, PlayerClasses.Size());
+		i.IsValid() && i.AsUnsigned() < Skins.Size();
+		i++)
 	{
-		if (Skins[i].Name.CompareNoCase(name) == 0)
+		if (i.GetUnsafe().Name.CompareNoCase(name) == 0)
 		{
-			if (PlayerClasses[pclass].CheckSkin (i))
-				return i;
+			if (pclass.GetMutableUnsafe().CheckSkin(i.AsUnsigned()))
+			{
+				return TIndex<FPlayerSkin>(Skins, i.AsUnsigned());
+			}
 			else
-				return pclass;
+			{
+				return TIndex<FPlayerSkin>(Skins, pclass.AsUnsigned());
+			}
 		}
 	}
-	return pclass;
+	return TIndex<FPlayerSkin>(Skins, pclass.AsUnsigned());
 }
 
 // [RH] List the names of all installed skins

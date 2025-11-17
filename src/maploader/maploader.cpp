@@ -3214,7 +3214,7 @@ void MapLoader::LoadLevel(MapData *map, const char *lumpname, int position)
 	CreateSections(Level);
 
 	// [RH] Spawn slope creating things first.
-	SpawnSlopeMakers(&MapThingsConverted[0], &MapThingsConverted[MapThingsConverted.Size()], oldvertextable);
+	SpawnSlopeMakers(MapThingsConverted.data(), &MapThingsConverted.Last(), oldvertextable);
 	CopySlopes();
 
 	// Spawn 3d floors - must be done before spawning things so it can't be done in P_SpawnSpecials

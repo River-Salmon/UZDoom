@@ -1459,7 +1459,7 @@ FDInputJoystick *FDInputJoystickManager::EnumDevices()
 	g_pdi->EnumDevices(DI8DEVCLASS_DEVICE, EnumCallback, &data, DIEDFL_ALLDEVICES);
 
 	// Sort by name so that devices with duplicate names can have numbers appended.
-	qsort(&controllers[0], controllers.Size(), sizeof(Enumerator), NameSort);
+	qsort(controllers.data(), controllers.Size(), sizeof(Enumerator), NameSort);
 	for (i = 1; i < controllers.Size(); ++i)
 	{
 		// Does this device have the same name as the previous one? If so, how

@@ -621,7 +621,7 @@ public:
 
 class FBoolCVarRef
 {
-	FBoolCVar* ref;
+	FBoolCVar* ref = nullptr;
 public:
 	int operator= (const FBoolCVarRef&) = delete;
 	int operator= (FBoolCVarRef&&) = delete;
@@ -635,7 +635,7 @@ public:
 
 class FIntCVarRef
 {
-	FIntCVar* ref;
+	FIntCVar* ref = nullptr;
 public:
 	
 	int operator= (const FIntCVarRef&) = delete;
@@ -651,7 +651,7 @@ public:
 
 class FFloatCVarRef
 {
-	FFloatCVar* ref;
+	FFloatCVar* ref = nullptr;
 public:
 	int operator= (const FFloatCVarRef&) = delete;
 	int operator= (FFloatCVarRef&&) = delete;
@@ -665,7 +665,7 @@ public:
 
 class FStringCVarRef
 {
-	FStringCVar* ref;
+	FStringCVar* ref = nullptr;
 public:
 	int operator= (const FStringCVarRef&) = delete;
 	int operator= (FStringCVarRef&&) = delete;
@@ -679,7 +679,7 @@ public:
 
 class FColorCVarRef
 {
-	FColorCVar* ref;
+	FColorCVar* ref = nullptr;
 public:
 	int operator= (const FColorCVarRef&) = delete;
 	int operator= (FColorCVarRef&&) = delete;
@@ -693,7 +693,7 @@ public:
 
 class FFlagCVarRef
 {
-	FFlagCVar* ref;
+	FFlagCVar* ref = nullptr;
 public:
 	int operator= (const FFlagCVarRef&) = delete;
 	int operator= (FFlagCVarRef&&) = delete;
@@ -707,7 +707,7 @@ public:
 
 class FMaskCVarRef
 {
-	FMaskCVar* ref;
+	FMaskCVar* ref = nullptr;
 public:
 	int operator= (const FMaskCVarRef&) = delete;
 	int operator= (FMaskCVarRef&&) = delete;

@@ -58,6 +58,7 @@
 #include "p_lnspec.h"
 #include "serializer.h"
 #include "g_levellocals.h"
+#include "index.h"
 
 CVAR(Int, savestatistics, 0, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR(String, statfile, "zdoomstat.txt", CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
@@ -395,40 +396,55 @@ int compare_level_names(const void* a, const void* b)
 
 static void StoreLevelStats(FLevelLocals *Level)
 {
-	unsigned int i;
-
 	if (gamestate != GS_LEVEL) return;
 
-	if (!(Level->flags2&LEVEL2_NOSTATISTICS))	// don't consider maps that were excluded from statistics
+	TIndex<OneLevel> i = TIndex<OneLevel>(LevelData, 0);
+	if (!(Level->flags2 & LEVEL2_NOSTATISTICS))	// don't consider maps that were excluded from statistics
 	{
-		for(i=0;i<LevelData.Size();i++)
+		for(i; i.IsValid(); i++)
 		{
-			if (!LevelData[i].Levelname.CompareNoCase(Level->MapName)) break;
+			const auto &level = i.GetUnsafe();
+			if (!level.Levelname.CompareNoCase(Level->MapName))
+			{
+				break;
+			}
 		}
-		if (i==LevelData.Size())
+		if (i.IsValid() && i.AsUnsigned() == LevelData.Size())
 		{
+			auto &level = i.GetMutableUnsafe();
 			LevelData.Reserve(1);
-			LevelData[i].Levelname = Level->MapName;
+			level.Levelname = Level->MapName;
 		}
-		LevelData[i].totalkills = Level->total_monsters;
-		LevelData[i].killcount = Level->killed_monsters;
-		LevelData[i].totalitems = Level->total_items;
-		LevelData[i].itemcount = Level->found_items;
-		LevelData[i].totalsecrets = Level->total_secrets;
-		LevelData[i].secretcount = Level->found_secrets;
-		LevelData[i].leveltime = Level->maptime;
 
-		// Check for living monsters. On some maps it can happen
-		// that the counter misses some. 
-		auto it = Level->GetThinkerIterator<AActor>();
-		AActor *ac;
-		int mc = 0;
-
-		while ((ac = it.Next()))
+		if (i.IsValid())
 		{
-			if ((ac->flags & MF_COUNTKILL) && ac->health > 0) mc++;
+			auto &level        = i.GetMutableUnsafe();
+			level.totalkills   = Level->total_monsters;
+			level.killcount    = Level->killed_monsters;
+			level.totalitems   = Level->total_items;
+			level.itemcount    = Level->found_items;
+			level.totalsecrets = Level->total_secrets;
+			level.secretcount  = Level->found_secrets;
+			level.leveltime    = Level->maptime;
+
+			// Check for living monsters. On some maps it can happen
+			// that the counter misses some.
+			auto    it = Level->GetThinkerIterator<AActor>();
+			AActor *ac = nullptr;
+			int     mc = 0;
+
+			while ((ac = it.Next()))
+			{
+				if ((ac->flags & MF_COUNTKILL) && ac->health > 0)
+				{
+					mc++;
+				}
+			}
+			if (mc == 0)
+			{
+				level.killcount = level.totalkills;
+			}
 		}
-		if (mc == 0) LevelData[i].killcount = LevelData[i].totalkills;
 	}
 	// sort level names alphabetically to bring the newly added level to its proper place when playing a hub.
 	qsort(&LevelData[0], LevelData.Size(), sizeof(LevelData[0]), compare_level_names);
@@ -479,27 +495,29 @@ void STAT_ChangeLevel(const char *newl, FLevelLocals *Level)
 			int statvals[6] = {0,0,0,0,0,0};
 			FString infostring;
 			int validlevels = LevelData.Size();
-			for(unsigned i = 0; i < LevelData.Size(); i++)
+			for (TIndex<OneLevel> i = TIndex<OneLevel>(LevelData, 0); i.IsValid(); i++)
 			{
-				statvals[0] += LevelData[i].killcount;
-				statvals[1] += LevelData[i].totalkills;
-				statvals[2] += LevelData[i].itemcount;
-				statvals[3] += LevelData[i].totalitems;
-				statvals[4] += LevelData[i].secretcount;
-				statvals[5] += LevelData[i].totalsecrets;
+				const auto &level = i.GetUnsafe();
+				statvals[0] += level.killcount;
+				statvals[1] += level.totalkills;
+				statvals[2] += level.itemcount;
+				statvals[3] += level.totalitems;
+				statvals[4] += level.secretcount;
+				statvals[5] += level.totalsecrets;
 			}
 
 			infostring.Format("%4d/%4d, %4d/%4d, %3d/%3d, %2d", statvals[0], statvals[1], statvals[2], statvals[3], statvals[4], statvals[5], validlevels);
 			FSessionStatistics *es = StatisticsEntry(sl, infostring.GetChars(), Level->totaltime);
 
-			for(unsigned i = 0; i < LevelData.Size(); i++)
+			for (TIndex<OneLevel> i = TIndex<OneLevel>(LevelData, 0); i.IsValid(); i++)
 			{
-				FString lsection = LevelData[i].Levelname;
+				const auto &level    = i.GetUnsafe();
+				FString lsection = level.Levelname;
 				lsection.ToUpper();
-				infostring.Format("%4d/%4d, %4d/%4d, %3d/%3d",
-					 LevelData[i].killcount, LevelData[i].totalkills, LevelData[i].itemcount, LevelData[i].totalitems, LevelData[i].secretcount, LevelData[i].totalsecrets);
+				infostring.Format("%4d/%4d, %4d/%4d, %3d/%3d", level.killcount, level.totalkills, level.itemcount,
+				                  level.totalitems, level.secretcount, level.totalsecrets);
 
-				LevelStatEntry(es, lsection.GetChars(), infostring.GetChars(), LevelData[i].leveltime);
+				LevelStatEntry(es, lsection.GetChars(), infostring.GetChars(), level.leveltime);
 			}
 			SaveStatistics(statfile, EpisodeStatistics);
 		}
@@ -580,12 +598,12 @@ FString STAT_EpisodeName()
 FString GetStatString()
 {
 	FString compose;
-	for(unsigned i = 0; i < LevelData.Size(); i++)
+	for(auto i = TIndex<OneLevel>(LevelData, 0); i.IsValid(); i++)
 	{
-		OneLevel *l = &LevelData[i];
+		const OneLevel& l = i.GetUnsafe();
 		compose.AppendFormat("Level %s - Kills: %d/%d - Items: %d/%d - Secrets: %d/%d - Time: %d:%02d\n", 
-			l->Levelname.GetChars(), l->killcount, l->totalkills, l->itemcount, l->totalitems, l->secretcount, l->totalsecrets,
-			l->leveltime/(60*TICRATE), (l->leveltime/TICRATE)%60);
+			l.Levelname.GetChars(), l.killcount, l.totalkills, l.itemcount, l.totalitems, l.secretcount, l.totalsecrets,
+			l.leveltime/(60*TICRATE), (l.leveltime/TICRATE)%60);
 	}
 	return compose;
 }

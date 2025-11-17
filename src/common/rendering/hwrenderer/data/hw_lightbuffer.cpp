@@ -121,9 +121,9 @@ int FLightBuffer::UploadLights(FDynLightData &data)
 		float *copyptr = mBufferPointer + thisindex*4;
 
 		memcpy(&copyptr[0], parmcnt, ELEMENT_SIZE);
-		memcpy(&copyptr[4], &data.arrays[0][0], size0 * ELEMENT_SIZE);
-		memcpy(&copyptr[4 + 4*size0], &data.arrays[1][0], size1 * ELEMENT_SIZE);
-		memcpy(&copyptr[4 + 4*(size0 + size1)], &data.arrays[2][0], size2 * ELEMENT_SIZE);
+		memcpy(&copyptr[4], data.arrays[0].data(), size0 * ELEMENT_SIZE);
+		memcpy(&copyptr[4 + 4*size0], data.arrays[1].data(), size1 * ELEMENT_SIZE);
+		memcpy(&copyptr[4 + 4*(size0 + size1)], data.arrays[2].data(), size2 * ELEMENT_SIZE);
 		return thisindex;
 	}
 	else

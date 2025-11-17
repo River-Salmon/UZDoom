@@ -214,7 +214,7 @@ class TObjPtr
 	union
 	{
 		mutable T pp;
-		mutable DObject *o;
+		mutable DObject *o = nullptr;
 	};
 public:
 

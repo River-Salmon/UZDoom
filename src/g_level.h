@@ -35,7 +35,7 @@ void G_DoLoadLevel (const FString &MapName, int position, bool autosave, bool ne
 
 void G_ClearSnapshots (void);
 void P_RemoveDefereds ();
-void G_ReadSnapshots (FResourceFile *);
+void G_ReadSnapshots(FileSys::FResourceFile *);
 void G_WriteSnapshots (TArray<FString> &, TArray<FCompressedBuffer> &);
 void G_WriteVisited(FSerializer &arc);
 void G_ReadVisited(FSerializer &arc);

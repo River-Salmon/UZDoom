@@ -1818,7 +1818,7 @@ void player_t::Serialize(FSerializer &arc)
 	}
 	if (skinname.IsNotEmpty())
 	{
-		userinfo.SkinChanged(skinname.GetChars(), CurrentPlayerClass);
+		userinfo.SkinChanged(skinname.GetChars(), TIndex<FPlayerClass>(PlayerClasses, CurrentPlayerClass));
 	}
 }
 

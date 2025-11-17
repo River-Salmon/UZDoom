@@ -32,6 +32,7 @@
 #include "doomtype.h"
 #include "r_defs.h"
 #include "r_data/sprites.h"
+#include "index.h"
 
 //
 // Refresh internal data structures,
@@ -53,6 +54,6 @@ extern uint32_t NumStdSprites;
 // POV data.
 //
 
-int R_FindSkin (const char *name, int pclass);	// [RH] Find a skin
+TIndex<class FPlayerSkin> R_FindSkin (const FString name, TIndex<class FPlayerClass> pclass);	// [RH] Find a skin
 
 #endif // __R_STATE_H__

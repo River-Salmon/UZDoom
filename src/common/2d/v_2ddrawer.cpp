@@ -42,6 +42,7 @@
 #include "v_video.h"
 #include "fcolormap.h"
 #include "texturemanager.h"
+#include "index.h"
 
 static F2DDrawer drawer = F2DDrawer();
 F2DDrawer* twod = &drawer;
@@ -255,9 +256,11 @@ void F2DDrawer::AddIndices(int firstvert, int count, ...)
 void F2DDrawer::AddIndices(int firstvert, TArray<int> &v)
 {
 	int addr = mIndices.Reserve(v.Size());
-	for (unsigned i = 0; i < v.Size(); i++)
+	auto reserved = TIndex<int>(mIndices, addr);
+	for (reserved; reserved.IsValid(); reserved++)
 	{
-		mIndices[addr + i] = firstvert + v[i];
+		auto vi        = TIndex<int>(v, reserved.AsUnsigned());
+		reserved.GetMutableUnsafe() = firstvert + vi.GetUnsafe();
 	}
 }
 

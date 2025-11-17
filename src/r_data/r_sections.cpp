@@ -713,9 +713,30 @@ public:
 			dest.mapsection = (short)group.groupedSections[0].section->mapsection;
 			dest.hacked = false;
 			dest.validcount = 0;
-			dest.segments.Set(&output.allLines[numsegments], group.segments.Size());
-			dest.sides.Set(&output.allSides[numsides], group.sideMap.CountUsed());
-			dest.subsectors.Set(&output.allSubsectors[numsubsectors], group.subsectors.Size());
+			if (output.allLines.Size() > 0)
+			{
+				dest.segments.Set(&output.allLines[numsegments], group.segments.Size());
+			}
+			else
+			{
+				dest.segments.Clear();
+			}
+			if (output.allSides.Size() > 0)
+			{
+				dest.sides.Set(&output.allSides[numsides], group.sideMap.CountUsed());
+			}
+			else
+			{
+				dest.sides.Clear();
+			}
+			if (output.allSubsectors.Size() > 0)
+			{
+				dest.subsectors.Set(&output.allSubsectors[numsubsectors], group.subsectors.Size());
+			}
+			else
+			{
+				dest.subsectors.Clear();
+			}
 			dest.vertexindex = -1;
 			dest.vertexcount = 0;
 			dest.flags = 0;

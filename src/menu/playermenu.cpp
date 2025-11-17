@@ -154,7 +154,7 @@ DEFINE_ACTION_FUNCTION(DPlayerMenu, SkinChanged)
 	PARAM_INT(sel);
 	if (DMenu::InMenu)
 	{
-		players[consoleplayer].userinfo.SkinNumChanged(sel);
+		players[consoleplayer].userinfo.SkinNumChanged(TIndex<FPlayerSkin>(Skins, sel));
 		cvar_set("skin", Skins[sel].Name.GetChars());
 	}
 	return 0;
