@@ -61,7 +61,7 @@
 #include "v_video.h"
 #include "version.h"
 #include "vm.h"
-
+#include <array>
 
 namespace Console::Defaults
 {
@@ -105,7 +105,7 @@ static FTextureID conflat;
 static uint32_t conshade;
 static bool conline;
 
-extern FConsoleCommand *Commands[FConsoleCommand::HASH_SIZE];
+extern std::array<FConsoleCommand*, FConsoleCommand::hash_size> Commands;
 
 int			ConWidth;
 bool		vidactive = false;
@@ -324,10 +324,8 @@ void C_DeinitConsole ()
 
 	// Free alias commands. (i.e. The "commands" that can be allocated
 	// at runtime.)
-	for (size_t i = 0; i < countof(Commands); ++i)
+	for (auto* command : Commands)
 	{
-		FConsoleCommand *command = Commands[i];
-
 		while (command != NULL)
 		{
 			FConsoleCommand *nextcmd = command->m_Next;

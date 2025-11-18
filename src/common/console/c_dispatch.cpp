@@ -51,6 +51,7 @@
 #include "c_buttons.h"
 #include "findfile.h"
 #include "gstrings.h"
+#include <array>
 
 // MACROS ------------------------------------------------------------------
 
@@ -161,7 +162,7 @@ void C_ClearDelayedCommands()
 
 // PRIVATE FUNCTION PROTOTYPES ---------------------------------------------
 
-static FConsoleCommand *FindNameInHashTable (FConsoleCommand **table, const char *name, size_t namelen);
+static FConsoleCommand *FindNameInHashTable (std::array<FConsoleCommand*, FConsoleCommand::hash_size>& table, const char *name, size_t namelen);
 static FConsoleCommand *ScanChainForName (FConsoleCommand *start, const char *name, size_t namelen, FConsoleCommand **prev);
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
@@ -170,7 +171,7 @@ static FConsoleCommand *ScanChainForName (FConsoleCommand *start, const char *na
 bool ParsingKeyConf, UnsafeExecutionContext;
 FString StoredWarp;
 
-FConsoleCommand* Commands[FConsoleCommand::HASH_SIZE];
+std::array<FConsoleCommand*, FConsoleCommand::hash_size> Commands;
 
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
@@ -428,20 +429,20 @@ static FConsoleCommand *ScanChainForName (FConsoleCommand *start, const char *na
 	return NULL;
 }
 
-static FConsoleCommand *FindNameInHashTable (FConsoleCommand **table, const char *name, size_t namelen)
+static FConsoleCommand *FindNameInHashTable (std::array<FConsoleCommand*, FConsoleCommand::hash_size>& table, const char *name, size_t namelen)
 {
 	FConsoleCommand *dummy;
 
-	return ScanChainForName (table[MakeKey (name, namelen) % FConsoleCommand::HASH_SIZE], name, namelen, &dummy);
+	return ScanChainForName (table[MakeKey (name, namelen) % FConsoleCommand::hash_size], name, namelen, &dummy);
 }
 
-bool FConsoleCommand::AddToHash (FConsoleCommand **table)
+bool FConsoleCommand::AddToHash (std::array<FConsoleCommand*, FConsoleCommand::hash_size>& table)
 {
 	unsigned int key;
 	FConsoleCommand *insert, **bucket;
 
 	key = MakeKey (m_Name.GetChars());
-	bucket = &table[key % HASH_SIZE];
+	bucket = &table[key % hash_size];
 
 	if (ScanChainForName (*bucket, m_Name.GetChars(), m_Name.Len(), &insert))
 	{
@@ -680,12 +681,12 @@ FString SubstituteAliasParams (FString &command, FCommandLine &args)
 	return buf;
 }
 
-static int DumpHash (FConsoleCommand **table, bool aliases, const char *pattern=NULL)
+static int DumpHash (std::array<FConsoleCommand*, FConsoleCommand::hash_size>& table, bool aliases, const char *pattern=NULL)
 {
 	int bucket, count;
 	FConsoleCommand *cmd;
 
-	for (bucket = count = 0; bucket < FConsoleCommand::HASH_SIZE; bucket++)
+	for (bucket = count = 0; bucket < FConsoleCommand::hash_size; bucket++)
 	{
 		cmd = table[bucket];
 		while (cmd)
@@ -738,7 +739,7 @@ void C_ArchiveAliases (FConfigFile *f)
 	int bucket;
 	FConsoleCommand *alias;
 
-	for (bucket = 0; bucket < FConsoleCommand::HASH_SIZE; bucket++)
+	for (bucket = 0; bucket < FConsoleCommand::hash_size; bucket++)
 	{
 		alias = Commands[bucket];
 		while (alias)
@@ -755,7 +756,7 @@ void C_ClearAliases ()
 	int bucket;
 	FConsoleCommand *alias;
 
-	for (bucket = 0; bucket < FConsoleCommand::HASH_SIZE; bucket++)
+	for (bucket = 0; bucket < FConsoleCommand::hash_size; bucket++)
 	{
 		alias = Commands[bucket];
 		while (alias)
@@ -779,7 +780,7 @@ void C_SetAlias (const char *name, const char *cmd)
 {
 	FConsoleCommand *prev, *alias, **chain;
 
-	chain = &Commands[MakeKey (name) % FConsoleCommand::HASH_SIZE];
+	chain = &Commands[MakeKey (name) % FConsoleCommand::hash_size];
 	alias = ScanChainForName (*chain, name, strlen (name), &prev);
 	if (alias != NULL)
 	{
@@ -804,7 +805,7 @@ CCMD (alias)
 	}
 	else
 	{
-		chain = &Commands[MakeKey (argv[1]) % FConsoleCommand::HASH_SIZE];
+		chain = &Commands[MakeKey (argv[1]) % FConsoleCommand::hash_size];
 
 		if (argv.argc() == 2)
 		{ // Remove the alias
