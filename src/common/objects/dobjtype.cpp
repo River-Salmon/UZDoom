@@ -858,7 +858,7 @@ void PClass::BuildFlatPointers() const
 				}
 				if (ScriptPointers.Size() > 0)
 				{
-					std::copy(&ScriptPointers[0], &ScriptPointers[0] + ScriptPointers.Size(), flat + ParentClass->FlatPointersSize + NativePointers.Size());
+					std::copy(ScriptPointers.Data(), ScriptPointers.Data() + ScriptPointers.Size(), flat + ParentClass->FlatPointersSize + NativePointers.Size());
 				}
 				FlatPointers = flat;
 				FlatPointersSize = ParentClass->FlatPointersSize + NativePointers.Size() + ScriptPointers.Size();

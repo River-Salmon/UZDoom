@@ -335,20 +335,22 @@ public:
 	// Returns the value of an element
 	TT operator() (size_t index) const
 	{
-		assert(index <= Count);
+		assert(IsValidIndex(index));
 		return Array[index];
 	}
 	// Returns a reference to the last element
 	T &Last() const
 	{
-		assert(Count > 0);
+		assert(IsValidIndex(Count-1));
 		return Array[Count-1];
 	}
 
 	T SafeGet (size_t index, const T& defaultval) const
 	{
-		if (index <= Count) return Array[index];
-		else return defaultval;
+		if (IsValidIndex(index))
+			return Array[index];
+		else
+			return defaultval;
 	}
 
 	[[nodiscard]] bool constexpr IsValidIndex(size_t index) const
@@ -359,7 +361,7 @@ public:
 	// returns address of first element
 	T *Data(size_t index = 0) const
 	{
-		assert(index <= Count);
+		assert((index == 0 && Count == 0) || index < Count); //index being 0 is valid in the empty array case
 		return &Array[index];
 	}
 

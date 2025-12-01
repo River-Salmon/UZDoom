@@ -1319,7 +1319,8 @@ FRawPS2Controller *FRawPS2Manager::EnumDevices()
 	free(devices);
 
 	// Sort the found devices so that we have a consistant ordering.
-	qsort(adapters.data(), adapters.Size(), sizeof(FAdapterHandle), DeviceSort);
+	if (adapters.Size() > 0)
+		qsort(adapters.data(), adapters.Size(), sizeof(FAdapterHandle), DeviceSort);
 
 	// Compare the new list of devices with the one we previously instantiated.
 	// Every device we currently hold is marked 0. Then scan through the new
