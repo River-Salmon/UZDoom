@@ -952,7 +952,6 @@ int FFont::StringWidth(const uint8_t *string, int spacing) const
 {
 	if (Type == EFontType::Dynamic)
 	{
-		FString str = (char *)string;
 		Trex::TextShaper shaper(*DynamicFontAtlas);
 		auto glyphs = shaper.ShapeUtf8(std::span<const char>((const char*)string, strlen((const char*)string)));
 		return Trex::TextShaper::Measure(glyphs).width * invSupersample;
@@ -1129,7 +1128,6 @@ FFont::FFont(const char *fontname, Trex::Atlas* fontAtlas)
 	GlobalKerning  = false;
 	SpaceWidth     = 0;
 	FontHeight     = fontAtlas->GetFont()->GetMetrics().height;
-	int FixedWidth = 0;
 
 	Type = EFontType::Dynamic;
 	DynamicFontAtlas = fontAtlas;
