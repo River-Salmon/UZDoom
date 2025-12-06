@@ -145,18 +145,24 @@ void FNotifyBuffer::Draw()
 				color = PrintColors[notify.PrintLevel];
 
 			int scale = active_con_scaletext(twod, generic_ui);
+			if (font->IsValidDynamicFont())
+			{
+				scale *= font->GetInvSupersampleScale();
+			}
+			int w = twod->GetWidth();
+			int h = twod->GetHeight();
 			if (!center)
 				DrawText(twod, font, color, 0, line, notify.Text.GetChars(),
-					DTA_VirtualWidth, twod->GetWidth() / scale,
-					DTA_VirtualHeight, twod->GetHeight() / scale,
+					DTA_VirtualWidth, w / scale,
+					DTA_VirtualHeight, h / scale,
 					DTA_KeepRatio, true,
 					DTA_Alpha, alpha, TAG_DONE);
 			else
 				DrawText(twod, font, color, (twod->GetWidth() -
 					font->StringWidth (notify.Text) * scale) / 2 / scale,
 					line, notify.Text.GetChars(),
-					DTA_VirtualWidth, twod->GetWidth() / scale,
-					DTA_VirtualHeight, twod->GetHeight() / scale,
+					DTA_VirtualWidth, w / scale,
+					DTA_VirtualHeight, h / scale,
 					DTA_KeepRatio, true,
 					DTA_Alpha, alpha, TAG_DONE);
 			line += lineadv;
