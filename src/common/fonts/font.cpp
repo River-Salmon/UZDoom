@@ -1122,7 +1122,7 @@ class FTrexAtlasImageSource : public FImageSource
 	}
 };
 
-FFont::FFont(const char *fontname, Trex::Atlas* fontAtlas)
+FFont::FFont(const char *fontname, Trex::Atlas* fontAtlas, const int superSampleScale)
 {
 	noTranslate    = true;
 	GlobalKerning  = false;
@@ -1149,6 +1149,7 @@ FFont::FFont(const char *fontname, Trex::Atlas* fontAtlas)
 	tex->SetSize(trexBitmap.Width(), trexBitmap.Height());
 	TexMan.AddGameTexture(tex);
 	DynamicFontAtlasTexture = tex;
+	invSupersample          = 1.0 / (superSampleScale + 0.00001);
 }
 
 //==========================================================================
