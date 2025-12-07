@@ -147,7 +147,7 @@ void FNotifyBuffer::Draw()
 			int scale = active_con_scaletext(twod, generic_ui);
 			if (font->IsValidDynamicFont())
 			{
-				scale *= font->GetInvSupersampleScale();
+				scale = 1;
 			}
 			int w = twod->GetWidth();
 			int h = twod->GetHeight();
