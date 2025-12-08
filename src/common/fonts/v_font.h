@@ -39,6 +39,8 @@
 #include "name.h"
 #include "palettecontainer.h"
 #include "Trex/Atlas.hpp"
+#include "Trex/TextShaper.hpp"
+#include <optional>
 
 class FGameTexture;
 struct FRemapTable;
@@ -178,6 +180,11 @@ public:
 		return InvSupersampleFactor;
 	}
 
+	inline Trex::TextShaper* GetDynamicTextShaper()
+	{
+		return DynamicTextShaper;
+	}
+
 	inline FFont *GetDynamicFontFallback() const
 	{
 		return DynamicFontFallback;
@@ -239,6 +246,7 @@ protected:
 
 	//DYNAMIC FONTS
 	Trex::Atlas *DynamicFontAtlas = nullptr;
+	Trex::TextShaper *DynamicTextShaper             = nullptr;
 	FGameTexture *DynamicFontAtlasTexture = nullptr;
 	double        InvSupersampleFactor          = 1.0 / 3.0;
 

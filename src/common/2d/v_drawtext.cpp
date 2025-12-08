@@ -50,6 +50,7 @@
 #include <type_traits>
 #include <span>
 #include <string>
+#include "Trex/Atlas.hpp"
 
 int ListGetInt(VMVa_List &tags);
 
@@ -287,8 +288,8 @@ void DrawTextCommon(F2DDrawer *drawer, FFont *font, int normalcolor, double x, d
 
 	if (font && font->IsValidDynamicFont())
 	{
-		const auto&atlas = *font->GetDynamicFontAtlas();
-		auto               shaper = Trex::TextShaper(atlas);
+		const Trex::Atlas& atlas = *font->GetDynamicFontAtlas();
+		Trex::TextShaper& shaper = *font->GetDynamicTextShaper();
 		Trex::ShapedGlyphs glyphs;
 		if constexpr (std::is_same_v<chartype, char>)
 		{
