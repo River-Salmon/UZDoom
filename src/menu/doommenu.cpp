@@ -142,6 +142,15 @@ DEFINE_ACTION_FUNCTION_NATIVE(DMenu, StartGameDirect, StartGameDirect)
 	return 0;
 }
 
+int GetSpacing(const DListMenuDescriptor &desc)
+{
+	if (desc.mFont->IsValidDynamicFont())
+	{
+		return std::max(desc.mLinespacing, desc.mFont->GetHeight());
+	}
+	return desc.mLinespacing;
+}
+
 bool M_SetSpecialMenu(FName& menu, int param)
 {
 	// some menus need some special treatment
@@ -675,7 +684,7 @@ void M_StartupEpisodeMenu(FNewGameStartup *gs)
 				if (y < topy) topy = y;
 			}
 
-			int spacing = ld->mLinespacing;
+			int spacing = GetSpacing(*ld);
 			for (unsigned i = 0; i < AllEpisodes.Size(); i++)
 			{
 				if (AllEpisodes[i].mPicName.IsNotEmpty())
@@ -828,7 +837,7 @@ static void BuildPlayerclassMenu()
 			}
 
 			// center the menu on the screen if the top space is larger than the bottom space
-			int totalheight = posy + (numclassitems+1) * ld->mLinespacing - topy;
+			int totalheight = posy + (numclassitems + 1) * GetSpacing(*ld) - topy;
 
 			if (numclassitems <= 1)
 			{
@@ -862,7 +871,7 @@ static void BuildPlayerclassMenu()
 							auto it = CreateListMenuItemText(ld->mXpos, ld->mYpos, ld->mLinespacing, *pname,
 								pname, ld->mFont,ld->mFontColor,ld->mFontColor2, NAME_EpisodeMenu, i);
 							ld->mItems.Push(it);
-							ld->mYpos += ld->mLinespacing;
+							ld->mYpos += GetSpacing(*ld);
 							n++;
 						}
 					}
@@ -1135,6 +1144,8 @@ DEFINE_ACTION_FUNCTION(DNewPlayerMenu, UpdateSkinOptions)
 
 extern int restart;
 
+
+
 void M_StartupSkillMenu(FNewGameStartup *gs)
 {
 	static int done = -1;
@@ -1196,7 +1207,7 @@ void M_StartupSkillMenu(FNewGameStartup *gs)
 				}
 			}
 
-			int spacing = ld->mLinespacing;
+			int spacing = GetSpacing(*ld);
 			//if (done != restart)
 			{
 				//done = restart;
@@ -1221,6 +1232,7 @@ void M_StartupSkillMenu(FNewGameStartup *gs)
 							continue;
 					}
 					if ((gameinfo.gametype & GAME_DoomStrifeChex) && spacing == 16) spacing = 18;
+					//spacing = ld->mFont->GetHeight();
 					break;
 				}
 

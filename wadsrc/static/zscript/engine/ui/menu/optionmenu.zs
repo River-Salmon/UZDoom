@@ -805,7 +805,7 @@ class OptionMenu : Menu
 		}
 		else
 		{
-			int visual_line_clicked = y / OptionMenuSettings.mLinespacing;
+			int visual_line_clicked = y / OptionHeight();
 			int current_visual_line = 0;
 
 			for (int i = 0; i < mDesc.mItems.Size(); i++)
@@ -915,7 +915,7 @@ class OptionMenu : Menu
 			y = DrawCaption(mDesc.mTitle, -y, true);
 		}
 		mDesc.mDrawTop = y / CleanYfac_1; // mouse checks are done in clean space.
-		int fontheight = OptionMenuSettings.mLinespacing * CleanYfac_1;
+		int fontheight = OptionHeight() * CleanYfac_1;
 
 		int indent = GetIndent();
 
@@ -926,7 +926,7 @@ class OptionMenu : Menu
 
 		int ytop = y + mDesc.mScrollTop * 8 * CleanYfac_1;
 		LastRow = box.y - OptionHeight() * CleanYfac_1;
-		int rowheight = OptionMenuSettings.mLinespacing * CleanYfac_1 + 1;
+		int rowheight = OptionHeight() * CleanYfac_1 + 1;
 
 		int _MaxItems = (LastRow - y) / rowheight + 1;
 		bool resized = _MaxItems != MaxItems;
