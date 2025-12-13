@@ -336,9 +336,9 @@ if (HAVE_VULKAN)
 	list( APPEND PROJECT_LIBRARIES "zvulkan" )
 endif()
 
+list( APPEND PROJECT_LIBRARIES "trex" )
 list( APPEND PROJECT_LIBRARIES "zwidget" )
 list( APPEND PROJECT_LIBRARIES "webp" )
-list( APPEND PROJECT_LIBRARIES "trex" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")
 
@@ -1206,6 +1206,7 @@ set (PCH_SOURCES
 	utility/nodebuilder/nodebuild_extract.cpp
 	utility/nodebuilder/nodebuild_gl.cpp
 	utility/nodebuilder/nodebuild_utility.cpp
+	utility/simdutf/simdutf.cpp
 )
 
 if( ZMUSIC_SYSTEM_INSTALL OR NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
@@ -1270,7 +1271,6 @@ set( GAME_SOURCES
 	common/filesystem/source/fs_stringpool.cpp
 	common/filesystem/source/unicode.cpp
 	common/filesystem/source/critsec.cpp
-
 )
 
 set( GAME_NONPCH_SOURCES ${GAME_SOURCES} )
@@ -1362,6 +1362,7 @@ include_directories(
 	xlat
 	utility
 	utility/nodebuilder
+	utility/simdutf
 	scripting
 	scripting/zscript
 	rendering
