@@ -555,7 +555,7 @@ class ConversationMenu : Menu
 					}
 					else
 					{
-						screen.DrawText(ConFont, colr, x, yy, "\xd", DTA_CellX, 8 * CleanXfac, DTA_CellY, 8 * CleanYfac);
+						screen.DrawText(Font.GetConsoleFont(ConFont), colr, x, yy, "\xd", DTA_CellX, 8 * CleanXfac, DTA_CellY, 8 * CleanYfac);
 					}
 				}
 			}

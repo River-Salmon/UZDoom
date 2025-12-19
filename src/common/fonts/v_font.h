@@ -133,6 +133,7 @@ public:
 	static FFont *GetSmallTextFont(FFont* fallbackIfNoUserChoice);
 	static FFont *GetTitleFont(FFont* fallbackIfNoUserChoice);
 	static FFont *GetDescriptionFont(FFont* fallbackIfNoUserChoice);
+	static FFont *GetConsoleFont(FFont* fallbackIfNoUserChoice);
 
 	// Return width of string in pixels (unscaled)
 	int StringWidth (const uint8_t *str, int spacing = 0) const;
