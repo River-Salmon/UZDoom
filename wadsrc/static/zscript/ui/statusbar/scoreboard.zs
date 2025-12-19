@@ -5,7 +5,7 @@ extend class BaseStatusBar
 
     virtual void InitScoreboard()
     {
-        scoreboardFont = NewSmallFont;
+        scoreboardFont = Font.GetSmallTextFont(NewSmallFont);
     }
 
     static clearscope int Scoreboard_CompareByTeams(int playerA, int playerB)

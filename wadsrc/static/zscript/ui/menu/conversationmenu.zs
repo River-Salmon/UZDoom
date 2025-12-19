@@ -140,7 +140,7 @@ class ConversationMenu : Menu
 		}
 		else
 		{
-			displayFont = NewSmallFont;
+			displayFont = Font.GetSmallTextFont(NewSmallFont);
 			fontScale = (CleanXfac+1) / 2;
 			refwidth = 640;
 			refheight = 400;
