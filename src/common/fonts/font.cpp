@@ -75,6 +75,19 @@ CUSTOM_CVAR(String, fontchoice_smalltext, "IBMPLEXS", CVAR_ARCHIVE)
 	SetFontChoice_SmallText(self);
 }
 
+void SetFontChoice_Title(const char *newFont);
+CUSTOM_CVAR(String, fontchoice_title, "LEXENDDE", CVAR_ARCHIVE)
+{
+	SetFontChoice_Title(self);
+}
+
+void SetFontChoice_Description(const char *newFont);
+CUSTOM_CVAR(String, fontchoice_description, "IBMPLEXS", CVAR_ARCHIVE)
+{
+	SetFontChoice_Description(self);
+}
+
+
 //actually overriding the font directly will become a last resort option
 //if you are having mod compatibility issues.
 void SetNewSmallFontOverride(const char *newFont);
@@ -635,6 +648,16 @@ void SetFontChoice_SmallText(const char *newFont)
 	//
 }
 
+void SetFontChoice_Title(const char *newFont)
+{
+	//
+}
+
+void SetFontChoice_Description(const char *newFont)
+{
+	//
+}
+
 void SetNewSmallFontOverride(const char* newFont)
 {
 	if (strcmp(newFont, "FO_DEFAULT") == 0)
@@ -719,6 +742,26 @@ void FFont::UpdateFontDynamicFallbacks(const char* lang)
 FFont *FFont::GetSmallTextFont(FFont* fallbackIfNoUserChoice)
 {
 	FFont *userFont = V_GetFont(*fontchoice_smalltext);
+	if (userFont)
+	{
+		return userFont;
+	}
+	return fallbackIfNoUserChoice;
+}
+
+FFont *FFont::GetTitleFont(FFont *fallbackIfNoUserChoice)
+{
+	FFont *userFont = V_GetFont(*fontchoice_title);
+	if (userFont)
+	{
+		return userFont;
+	}
+	return fallbackIfNoUserChoice;
+}
+
+FFont *FFont::GetDescriptionFont(FFont *fallbackIfNoUserChoice)
+{
+	FFont *userFont = V_GetFont(*fontchoice_description);
 	if (userFont)
 	{
 		return userFont;
