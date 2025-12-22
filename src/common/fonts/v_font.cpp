@@ -945,7 +945,6 @@ void V_InitFonts()
 	}
 	
 	CurrentConsoleFont = NewConsoleFont;
-	//BigUpper           = V_GetFont("WDXLLUBR");
 	ConFont = V_GetFont("ConsoleFont", "CONFONT");
 	V_GetFont("IndexFont", "INDEXFON");	// detect potential replacements for this one.
 }
