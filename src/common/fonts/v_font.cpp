@@ -957,7 +957,7 @@ void V_LoadTranslations()
 		if (!font->noTranslate) font->LoadTranslations();
 	}
 
-	if (BigFont)
+	if (BigFont && BigFont->IsValidDynamicFont())
 	{
 		CalcDefaultTranslation(BigFont, CR_UNTRANSLATED * 2 + 1);
 		if (OriginalBigFont != nullptr && OriginalBigFont != BigFont)
@@ -970,7 +970,7 @@ void V_LoadTranslations()
 			OriginalBigFont->forceremap = true;
 		}
 	}
-	if (SmallFont)
+	if (SmallFont && SmallFont->IsValidDynamicFont())
 	{
 		CalcDefaultTranslation(SmallFont, CR_UNTRANSLATED * 2);
 		if (OriginalSmallFont != nullptr && OriginalSmallFont != SmallFont)
@@ -982,7 +982,7 @@ void V_LoadTranslations()
 			OriginalSmallFont->Translations[CR_UNTRANSLATED] = FTranslationID::fromInt(sometrans);
 			OriginalSmallFont->forceremap = true;
 		}
-		if (NewSmallFont != nullptr)
+		if (NewSmallFont != nullptr && NewSmallFont->IsValidDynamicFont())
 		{
 			assert(IsLuminosityTranslation(NewSmallFont->Translations[0]));
 			int sometrans = NewSmallFont->Translations[0].index();
