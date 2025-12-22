@@ -3901,7 +3901,7 @@ bool AActor::AdjustReflectionAngle (AActor *thing, DAngle &angle)
 	return false;
 }
 
-int AActor::AbsorbDamage(int damage, FName dmgtype, AActor *inflictor, AActor *source, int flags)
+int AActor::AbsorbDamage(int damage, FName dmgtype, AActor *inflictor, AActor *source, int flags, DAngle angle)
 {
 	AActor *next;
 	for (AActor *item = Inventory; item != nullptr; item = next)
@@ -3910,8 +3910,8 @@ int AActor::AbsorbDamage(int damage, FName dmgtype, AActor *inflictor, AActor *s
 		next = item->Inventory;
 		IFVIRTUALPTRNAME(item, NAME_Inventory, AbsorbDamage)
 		{
-			VMValue params[7] = { item, damage, dmgtype.GetIndex(), &damage, inflictor, source, flags };
-			VMCall(func, params, 7, nullptr, 0);
+			VMValue params[8] = { item, damage, dmgtype.GetIndex(), &damage, inflictor, source, flags, angle.Degrees() };
+			VMCall(func, params, 8, nullptr, 0);
 		}
 	}
 	return damage;
@@ -5071,6 +5071,26 @@ void AActor::Tick ()
 		}
 	}
 
+	if (Sector->Flags & SECF_KILLMONSTERS && Z() == floorz && player == nullptr && (flags & MF_SHOOTABLE) &&
+	    !(flags & MF_FLOAT))
+	{
+		P_DamageMobj(this, nullptr, nullptr, TELEFRAG_DAMAGE, NAME_InstantDeath);
+		// must have been removed
+		if (ObjectFlags & OF_EuthanizeMe)
+			return;
+	}
+	//[inkoalawetrust] Genericized level damage handling that makes sector, 3D floor, and TERRAIN flat damage affect
+	//monsters and other NPCs too.
+	P_ActorOnSpecial3DFloor(
+		this); // 3D floors must be checked separately to see if their control sector allows non-player damage
+	if (checkForSpecialSector(this, Sector))
+	{
+		P_ActorInSpecialSector(this, Sector);
+		if (!isAbove(Sector->floorplane.ZatPoint(this)) ||
+		    waterlevel) // Actor must be touching the floor for TERRAIN flats.
+			P_ActorOnSpecialFlat(this, P_GetThingFloorType(this));
+	}
+
 	assert (state != NULL);
 	if (state == NULL)
 	{
@@ -5081,22 +5101,6 @@ void AActor::Tick ()
 		return; // freed itself
 
 	UpdateRenderSectorList();
-
-	if (Sector->Flags & SECF_KILLMONSTERS && Z() == floorz &&
-		player == nullptr && (flags & MF_SHOOTABLE) && !(flags & MF_FLOAT))
-	{
-		P_DamageMobj(this, nullptr, nullptr, TELEFRAG_DAMAGE, NAME_InstantDeath);
-		// must have been removed
-		if (ObjectFlags & OF_EuthanizeMe) return;
-	}
-	//[inkoalawetrust] Genericized level damage handling that makes sector, 3D floor, and TERRAIN flat damage affect monsters and other NPCs too.
-	P_ActorOnSpecial3DFloor(this); //3D floors must be checked separately to see if their control sector allows non-player damage
-	if (checkForSpecialSector(this,Sector))
-	{
-		P_ActorInSpecialSector(this,Sector);
-		if (!isAbove(Sector->floorplane.ZatPoint(this)) || waterlevel) // Actor must be touching the floor for TERRAIN flats.
-			P_ActorOnSpecialFlat(this, P_GetThingFloorType(this));
-	}
 
 	if (tics != -1)
 	{
@@ -5600,7 +5604,7 @@ AActor *AActor::StaticSpawn(FLevelLocals *Level, PClassActor *type, const DVecto
 
 	AActor *actor;
 
-	if (GetDefaultByType(type)->ObjectFlags & OF_ClientSide)
+	if (GetDefaultByType(type)->IsClientSide())
 	{
 		actor = static_cast<AActor*>(Level->CreateClientSideThinker(type));
 	}
@@ -5627,7 +5631,7 @@ DEFINE_ACTION_FUNCTION(AActor, Spawn)
 
 static AActor* SpawnClientSide(PClassActor* type, double x, double y, double z, int flags)
 {
-	if (!(GetDefaultByType(type)->ObjectFlags & OF_ClientSide))
+	if (!GetDefaultByType(type)->IsClientSide())
 	{
 		ThrowAbortException(X_OTHER, "Tried to spawn a non-clientside Actor from a clientside spawn function.");
 		return nullptr;
@@ -8332,19 +8336,22 @@ DEFINE_ACTION_FUNCTION(AActor, DoSpecialDamage)
 	PARAM_OBJECT_NOT_NULL(target, AActor);
 	PARAM_INT(damage);
 	PARAM_NAME(damagetype);
+	PARAM_INT(flags); //[MC] Only needed for Super.DoSpecialDamage() calls to maintain consistency for all parameters
+	PARAM_ANGLE(angle);
+
 	ACTION_RETURN_INT(self->DoSpecialDamage(target, damage, damagetype));
 }
 
-int AActor::CallDoSpecialDamage(AActor *target, int damage, FName damagetype)
+int AActor::CallDoSpecialDamage(AActor *target, int damage, FName damagetype, int flags, DAngle angle)
 {
 	IFVIRTUAL(AActor, DoSpecialDamage)
 	{
 		// Without the type cast this picks the 'void *' assignment...
-		VMValue params[4] = { (DObject*)this, (DObject*)target, damage, damagetype.GetIndex() };
+		VMValue params[6] = {(DObject *)this, (DObject *)target, damage, damagetype.GetIndex(), flags, angle.Degrees() };
 		VMReturn ret;
 		int retval;
 		ret.IntAt(&retval);
-		VMCall(func, params, 4, &ret, 1);
+		VMCall(func, params, 6, &ret, 1);
 		return retval;
 	}
 	else return DoSpecialDamage(target, damage, damagetype);
@@ -8398,18 +8405,21 @@ DEFINE_ACTION_FUNCTION(AActor, TakeSpecialDamage)
 	PARAM_OBJECT(source, AActor);
 	PARAM_INT(damage);
 	PARAM_NAME(damagetype);
+	PARAM_INT(flags); //[MC] Only needed for Super.TakeSpecialDamage() calls to maintain consistency for all parameters
+	PARAM_ANGLE(angle);
+
 	ACTION_RETURN_INT(self->TakeSpecialDamage(inflictor, source, damage, damagetype));
 }
 
-int AActor::CallTakeSpecialDamage(AActor *inflictor, AActor *source, int damage, FName damagetype)
+int AActor::CallTakeSpecialDamage(AActor *inflictor, AActor *source, int damage, FName damagetype, int flags, DAngle angle)
 {
 	IFVIRTUAL(AActor, TakeSpecialDamage)
 	{
-		VMValue params[5] = { (DObject*)this, inflictor, source, damage, damagetype.GetIndex() };
+		VMValue params[7] = { (DObject*)this, inflictor, source, damage, damagetype.GetIndex(), flags, angle.Degrees() };
 		VMReturn ret;
 		int retval;
 		ret.IntAt(&retval);
-		VMCall(func, params, 5, &ret, 1);
+		VMCall(func, params, 7, &ret, 1);
 		return retval;
 	}
 	else return TakeSpecialDamage(inflictor, source, damage, damagetype);
@@ -8656,7 +8666,7 @@ void AActor::ClearCounters()
 	}
 }
 
-int AActor::GetModifiedDamage(FName damagetype, int damage, bool passive, AActor *inflictor, AActor *source, int flags)
+int AActor::GetModifiedDamage(FName damagetype, int damage, bool passive, AActor *inflictor, AActor *source, int flags, DAngle angle)
 {
 	auto inv = Inventory;
 	while (inv != nullptr && !(inv->ObjectFlags & OF_EuthanizeMe))
@@ -8664,8 +8674,8 @@ int AActor::GetModifiedDamage(FName damagetype, int damage, bool passive, AActor
 		auto nextinv = inv->Inventory;
 		IFVIRTUALPTRNAME(inv, NAME_Inventory, ModifyDamage)
 		{
-			VMValue params[8] = { (DObject*)inv, damage, damagetype.GetIndex(), &damage, passive, inflictor, source, flags };
-			VMCall(func, params, 8, nullptr, 0);
+			VMValue params[9] = { (DObject*)inv, damage, damagetype.GetIndex(), &damage, passive, inflictor, source, flags, angle.Degrees() };
+			VMCall(func, params, 9, nullptr, 0);
 		}
 		inv = nextinv;
 	}

@@ -48,6 +48,7 @@
 #include "m_argv.h"
 #include "m_joy.h"
 #include "m_misc.h"
+#include "printf.h"
 #include "v_font.h"
 #include "v_video.h"
 #include "version.h"
@@ -85,6 +86,7 @@ EXTERN_CVAR (Int, gl_texture_hqresize_targets)
 EXTERN_CVAR(Int, wipetype)
 EXTERN_CVAR(Bool, i_pauseinbackground)
 EXTERN_CVAR(Bool, i_soundinbackground)
+EXTERN_CVAR(Bool, i_is_new_release)
 
 FARG(config, "Configuration", "Specifies an alternative configuration file to use.", "configfile",
 	"Causes " GAMENAME " to use an alternative configuration file. If configfile does not exist,"
@@ -152,11 +154,11 @@ static void CollectDefaultSearchPaths()
 			DefaultSearchPaths.Push(DEFAULT_SHARE_DIR + GameDirs[i]);
 		}
 
-#ifdef __HAIKU__
+#	ifdef __HAIKU__
 		DefaultSearchPaths.Push("$HOME/config/data" + GameDirs[i]);
-#else
+#	else
 		DefaultSearchPaths.Push("/usr/share" + GameDirs[i]);
-#endif
+#	endif
 	}
 #endif
 
@@ -231,7 +233,7 @@ FGameConfigFile::FGameConfigFile ()
 		SetSection ("IWADSearch.Directories", true);
 		SetValueForKey ("Path", ".", true);
 		SetValueForKey ("Path", "$DOOMWADDIR", true);
-
+		SetValueForKey ("PathList", "$DOOMWADPATH", true);
 		for (unsigned int i = 0; i < DefaultSearchPaths.Size(); i++)
 		{
 			SetValueForKey ("Path", DefaultSearchPaths[i].GetChars(), true);
@@ -243,7 +245,7 @@ FGameConfigFile::FGameConfigFile ()
 	{
 		SetSection ("FileSearch.Directories", true);
 		SetValueForKey ("Path", "$DOOMWADDIR", true);
-
+		SetValueForKey ("PathList", "$DOOMWADPATH", true);
 		for (unsigned int i = 0; i < DefaultSearchPaths.Size(); i++)
 		{
 			SetValueForKey ("Path", DefaultSearchPaths[i].GetChars(), true);
@@ -385,17 +387,18 @@ void FGameConfigFile::DoGlobalSetup ()
 	}
 	if (SetSection ("LastRun"))
 	{
+		const char *lastRelease = GetValueForKey ("Release");
+		i_is_new_release = !lastRelease || strcmp(VERSIONSTR, lastRelease) != 0;
+
 		const char *lastver = GetValueForKey ("Version");
 		if (lastver != NULL)
 		{
+			FBaseCVar *var;
 			double last = atof (lastver);
 			if (last < 207)
 			{ // Now that snd_midiprecache works again, you probably don't want it on.
-				FBaseCVar *precache = FindCVar ("snd_midiprecache", NULL);
-				if (precache != NULL)
-				{
-					precache->ResetToDefault();
-				}
+				var = FindCVar ("snd_midiprecache", NULL);
+				if (var != NULL) var->ResetToDefault();
 			}
 			if (last < 208)
 			{ // Weapon sections are no longer used, so tidy up the config by deleting them.
@@ -422,11 +425,8 @@ void FGameConfigFile::DoGlobalSetup ()
 			if (last < 209)
 			{
 				// menu dimming is now a gameinfo option so switch user override off
-				FBaseCVar *dim = FindCVar ("dimamount", NULL);
-				if (dim != NULL)
-				{
-					dim->ResetToDefault ();
-				}
+				var = FindCVar ("dimamount", NULL);
+				if (var != NULL) var->ResetToDefault ();
 			}
 			if (last < 210)
 			{
@@ -439,7 +439,7 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 213)
 			{
-				auto var = FindCVar("snd_channels", NULL);
+				var = FindCVar("snd_channels", NULL);
 				if (var != NULL)
 				{
 					// old settings were default 32, minimum 8, new settings are default 128, minimum 64.
@@ -449,7 +449,7 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 214)
 			{
-				FBaseCVar *var = FindCVar("hud_scale", NULL);
+				var = FindCVar("hud_scale", NULL);
 				if (var != NULL) var->ResetToDefault();
 				var = FindCVar("st_scale", NULL);
 				if (var != NULL) var->ResetToDefault();
@@ -465,12 +465,12 @@ void FGameConfigFile::DoGlobalSetup ()
 			if (last < 215)
 			{
 				// Previously a true/false boolean. Now an on/off/auto tri-state with auto as the default.
-				FBaseCVar *var = FindCVar("snd_hrtf", NULL);
+				var = FindCVar("snd_hrtf", NULL);
 				if (var != NULL) var->ResetToDefault();
 			}
 			if (last < 216)
 			{
-				FBaseCVar *var = FindCVar("gl_texture_hqresize", NULL);
+				var = FindCVar("gl_texture_hqresize", NULL);
 				if (var != NULL)
 				{
 					auto v = var->GetGenericRep(CVAR_Int);
@@ -557,11 +557,10 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 217)
 			{
-				auto var = FindCVar("vid_scalemode", NULL);
-				UCVarValue newvalue;
+				var = FindCVar("vid_scalemode", NULL);
 				if (var != NULL)
 				{
-					UCVarValue v = var->GetGenericRep(CVAR_Int);
+					UCVarValue v = var->GetGenericRep(CVAR_Int), newvalue;
 					if (v.Int == 3) // 640x400
 					{
 						newvalue.Int = 2;
@@ -578,7 +577,7 @@ void FGameConfigFile::DoGlobalSetup ()
 			{
 				// 2019-12-06 - polybackend merge
 				// migrate vid_enablevulkan to vid_preferbackend
-				auto var = FindCVar("vid_enablevulkan", NULL);
+				var = FindCVar("vid_enablevulkan", NULL);
 				if (var != NULL)
 				{
 					UCVarValue v = var->GetGenericRep(CVAR_Int);
@@ -595,10 +594,9 @@ void FGameConfigFile::DoGlobalSetup ()
 						vid_scale_custompixelaspect = 1.0f;
 				}
 				var = FindCVar("vid_scalemode", NULL);
-				UCVarValue newvalue;
 				if (var != NULL)
 				{
-					UCVarValue v = var->GetGenericRep(CVAR_Int);
+					UCVarValue v = var->GetGenericRep(CVAR_Int), newvalue;
 					switch (v.Int)
 					{
 					case 1:
@@ -617,7 +615,7 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 220)
 			{
-				auto var = FindCVar("Gamma", NULL);
+				var = FindCVar("Gamma", NULL);
 				if (var != NULL)
 				{
 					UCVarValue v = var->GetGenericRep(CVAR_Float);
@@ -638,7 +636,7 @@ void FGameConfigFile::DoGlobalSetup ()
 #else
 				double xfact = in_mouse == 1? 1.5 : 4, yfact = 1;
 #endif
-				auto var = FindCVar("m_noprescale", NULL);
+				var = FindCVar("m_noprescale", NULL);
 				if (var != NULL)
 				{
 					UCVarValue v = var->GetGenericRep(CVAR_Bool);
@@ -670,7 +668,7 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 222)
 			{
-				auto var = FindCVar("mod_dumb_mastervolume", NULL);
+				var = FindCVar("mod_dumb_mastervolume", NULL);
 				if (var != NULL)
 				{
 					UCVarValue v = var->GetGenericRep(CVAR_Float);
@@ -685,7 +683,8 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 224)
 			{
-				if (const auto var = FindCVar("m_sensitivity_x", NULL))
+				var = FindCVar("m_sensitivity_x", NULL);
+				if (var != NULL)
 				{
 					UCVarValue v = var->GetGenericRep(CVAR_Float);
 					v.Float *= 0.5f;
@@ -694,19 +693,26 @@ void FGameConfigFile::DoGlobalSetup ()
 			}
 			if (last < 225)
 			{
-				if (const auto var = FindCVar("gl_lightmode", NULL))
+				var = FindCVar("gl_lightmode", NULL);
+				if (var != NULL)
 				{
 					UCVarValue v = var->GetGenericRep(CVAR_Int);
 					v.Int = v.Int == 16 ? 2 : v.Int == 8 ? 1 : 0;
 					var->SetGenericRep(v, CVAR_Int);
 				}
 			}
-			if (last < 226)
+			if (last < 226 // GZDoom 4.14.2
+				|| last == 228) // UZDoom 4.14.3 (227 was used in a bunch of 5.0 dev builds)
 			{
 				// We can't handle key config yet, because
 				// the files aren't fully loaded. Just queue
 				// up a flag to do this later.
 				b226ResetGamepad = true;
+			}
+			if (last < 229) // UZDoom 5.0
+			{
+				// Reset brightness related settings, as the values all mean something different now
+				AddCommandString("vid_reset2defaults");
 			}
 		}
 	}
@@ -992,6 +998,7 @@ void FGameConfigFile::ArchiveGlobalData ()
 	SetSection ("LastRun", true);
 	ClearCurrentSection ();
 	SetValueForKey ("Version", LASTRUNVERSION);
+	SetValueForKey ("Release", VERSIONSTR);
 
 	SetSection ("GlobalSettings", true);
 	ClearCurrentSection ();

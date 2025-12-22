@@ -512,6 +512,7 @@ enum ActorRenderFlag2
 	RF2_ANGLEDROLL				= 0x0800,	// Sprite roll amount depends on (actor.Angle - actor.AngledRollOffset)
 	RF2_INTERPOLATESCALE		= 0x1000,
 	RF2_INTERPOLATEALPHA		= 0x2000,
+	RF2_NODYNAMICLIGHTING		= 0x4000,	// [MC] Disable dynamic lighting effects on sprites/models
 };
 
 // This translucency value produces the closest match to Heretic's TINTTAB.
@@ -855,7 +856,7 @@ public:
 	// Adjusts the angle for deflection/reflection of incoming missiles
 	// Returns true if the missile should be allowed to explode anyway
 	bool AdjustReflectionAngle (AActor *thing, DAngle &angle);
-	int AbsorbDamage(int damage, FName dmgtype, AActor *inflictor, AActor *source, int flags);
+	int AbsorbDamage(int damage, FName dmgtype, AActor *inflictor, AActor *source, int flags, DAngle angle);
 	void AlterWeaponSprite(visstyle_t *vis);
 
 	bool CheckNoDelay();
@@ -882,11 +883,11 @@ public:
 	// Perform some special damage action. Returns the amount of damage to do.
 	// Returning -1 signals the damage routine to exit immediately
 	int DoSpecialDamage (AActor *target, int damage, FName damagetype);
-	int CallDoSpecialDamage(AActor *target, int damage, FName damagetype);
+	int CallDoSpecialDamage(AActor *target, int damage, FName damagetype, int flags, DAngle angle);
 
 	// Like DoSpecialDamage, but called on the actor receiving the damage.
 	int TakeSpecialDamage (AActor *inflictor, AActor *source, int damage, FName damagetype);
-	int CallTakeSpecialDamage(AActor *inflictor, AActor *source, int damage, FName damagetype);
+	int CallTakeSpecialDamage(AActor *inflictor, AActor *source, int damage, FName damagetype, int flags, DAngle angle);
 
 	// Actor had MF_SKULLFLY set and rammed into something
 	// Returns false to stop moving and true to keep moving
@@ -1396,6 +1397,8 @@ public:
 
 	// [RH] Used to interpolate the view to get >35 FPS
 	DVector3 Prev;
+	// TODO: Reduce the size of these, this much accuracy isn't needed. Unfortunately a lot
+	// of this data is built around using doubles so this will require changing a lot of things.
 	DRotator PrevAngles;
 	DVector2 PrevScale;
 	double PrevAlpha;
@@ -1709,7 +1712,7 @@ public:
 
 	int GetLightLevel(sector_t* rendersector);
 	int ApplyDamageFactor(FName damagetype, int damage) const;
-	int GetModifiedDamage(FName damagetype, int damage, bool passive, AActor *inflictor, AActor *source, int flags = 0);
+	int GetModifiedDamage(FName damagetype, int damage, bool passive, AActor *inflictor, AActor *source, int flags, DAngle angle);
 	void DeleteAttachedLights();
 	bool isFrozen() const;
 

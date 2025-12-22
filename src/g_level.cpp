@@ -1949,6 +1949,7 @@ void FLevelLocals::Init()
 	skyspeed1 = info->skyspeed1;
 	skyspeed2 = info->skyspeed2;
 	skymistspeed = info->skymistspeed;
+	skymistyscale = info->skymistyscale;
 	skytexture1 = TexMan.GetTextureID(info->SkyPic1.GetChars(), ETextureType::Wall, FTextureManager::TEXMAN_Overridable | FTextureManager::TEXMAN_ReturnFirst);
 	skytexture2 = TexMan.GetTextureID(info->SkyPic2.GetChars(), ETextureType::Wall, FTextureManager::TEXMAN_Overridable | FTextureManager::TEXMAN_ReturnFirst);
 	skymisttexture = TexMan.GetTextureID(info->SkyMistPic.GetChars(), ETextureType::Wall, FTextureManager::TEXMAN_Overridable | FTextureManager::TEXMAN_ReturnFirst);
@@ -2549,14 +2550,14 @@ void FLevelLocals::ApplyCompatibility2()
 	i_compatflags2 = GetCompatibility2(ELevelCompatFlags2::FromInt(compatflags2)) | ii_compatflags2;
 }
 
-AActor* FLevelLocals::SelectActorFromTID(int tid, size_t index, AActor* defactor)
+AActor* FLevelLocals::SelectActorFromTID(int tid, size_t index, bool clientSide, AActor* defactor)
 {
 	if (tid == 0)
 		return defactor;
 
 	AActor* actor = nullptr;
 	size_t cur = 0u;
-	auto it = GetActorIterator(tid);
+	auto it = clientSide ? GetClientSideActorIterator(tid) : GetActorIterator(tid);
 	while ((actor = it.Next()) != nullptr)
 	{
 		if (cur == index)

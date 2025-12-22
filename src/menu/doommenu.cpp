@@ -61,6 +61,7 @@
 #include "teaminfo.h"
 #include "texturemanager.h"
 #include "v_draw.h"
+#include "v_video.h"
 #include "vm.h"
 
 EXTERN_CVAR(Int, cl_gfxlocalization)
@@ -70,6 +71,15 @@ EXTERN_CVAR(Bool, quicksaverotation)
 EXTERN_CVAR(Bool, show_messages)
 EXTERN_CVAR(Bool, haptics_do_menus)
 EXTERN_CVAR(Float, hud_scalefactor)
+
+EXTERN_CVAR(Float, vid_gamma)
+EXTERN_CVAR(Float, vid_contrast)
+EXTERN_CVAR(Float, vid_brightness)
+EXTERN_CVAR(Float, vid_saturation)
+EXTERN_CVAR(Float, vid_fixgamma)
+EXTERN_CVAR(Float, vid_blackpoint)
+EXTERN_CVAR(Float, vid_whitepoint)
+EXTERN_CVAR(Int, gl_satformula)
 
 CVAR(Bool, m_simpleoptions, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG);
 CVAR(Bool, m_simpleoptions_view, true, 0);
@@ -340,7 +350,7 @@ void OnMenuOpen(bool makeSound)
 //
 //==========================================================================
 
-CUSTOM_CVAR(Float, dimamount, -1.f, CVAR_ARCHIVE)
+CUSTOM_CVAR(Float, dimamount, 0.8f, CVAR_ARCHIVE)
 {
 	if (self < 0.f && self != -1.f)
 	{
@@ -351,7 +361,7 @@ CUSTOM_CVAR(Float, dimamount, -1.f, CVAR_ARCHIVE)
 		self = 1.f;
 	}
 }
-CVAR(Color, dimcolor, 0xffd700, CVAR_ARCHIVE)
+CVAR(Color, dimcolor, 0x000000, CVAR_ARCHIVE)
 
 void System_M_Dim()
 {
@@ -620,6 +630,17 @@ CCMD (sizeup)
 	}
 
 	S_Sound(CHAN_VOICE, CHANF_UI|(haptics_do_menus?CHANF_RUMBLE:CHANF_NORUMBLE), "menu/change", snd_menuvolume, ATTN_NONE);
+}
+
+CCMD(vid_reset2defaults)
+{
+	vid_contrast->ResetToDefault();
+	vid_brightness->ResetToDefault();
+	vid_saturation->ResetToDefault();
+	vid_fixgamma->ResetToDefault();
+	vid_blackpoint->ResetToDefault();
+	vid_whitepoint->ResetToDefault();
+	gl_satformula->ResetToDefault();
 }
 
 CCMD(reset2defaults)

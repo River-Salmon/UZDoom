@@ -158,7 +158,7 @@ struct FLevelLocals
 	ELevelCompatFlags2 GetCompatibility2(ELevelCompatFlags2 mask);
 	void ApplyCompatibility();
 	void ApplyCompatibility2();
-	AActor* SelectActorFromTID(int tid, size_t index, AActor* defactor);
+	AActor* SelectActorFromTID(int tid, size_t index, bool clientSide, AActor* defactor);
 
 	void Init();
 
@@ -348,9 +348,9 @@ public:
 	{
 		return NActorIterator(ClientSideTIDHash, type, tid);
 	}
-	AActor *SingleActorFromTID(int tid, AActor *defactor)
+	AActor *SingleActorFromTID(int tid, bool clientSide, AActor *defactor)
 	{
-		return tid == 0 ? defactor : GetActorIterator(tid).Next();
+		return tid == 0 ? defactor : (clientSide ? GetClientSideActorIterator(tid).Next() : GetActorIterator(tid).Next());
 	}
 
 	bool SectorHasTags(sector_t *sector)
@@ -699,9 +699,10 @@ public:
 	float		skyspeed1;				// Scrolling speed of sky textures, in pixels per ms
 	float		skyspeed2;
 	float		skymistspeed;
+	float		skymistyscale;			// Y-scale for skymist layer. Scales from horizon as midpoint. Doesn't tile.
 
 	double		sky1pos, sky2pos;
-	float		hw_sky1pos, hw_sky2pos, hw_skymistpos;
+	float		hw_sky1pos, hw_sky2pos, hw_skymistpos, hw_skymistyscale;
 	bool		skystretch;
 	uint32_t	globalcolormap;
 

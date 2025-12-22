@@ -356,6 +356,8 @@ DefaultOptionMenu
 OptionMenu "OptionsMenu" protected
 {
 	Title "$OPTMNU_TITLE"
+	Submenu "$OS_TITLE", "os_Menu"
+	StaticText " "
 	Submenu "$OPTMNU_CONTROLS",			"CustomizeControls"
 	Submenu "$OPTMNU_MOUSE",			"MouseOptions"
 	Submenu "$OPTMNU_JOYSTICK",			"JoystickOptions"
@@ -373,9 +375,7 @@ OptionMenu "OptionsMenu" protected
 	Submenu "$OPTMNU_DISPLAY",			"VideoOptions"
 	Submenu "$OPTMNU_VIDEO",			"VideoModeMenu"
 	StaticText " "
-	Submenu "$OS_TITLE", "os_Menu"
 	Option "$OPTMNU_SIMPLEON",			"m_simpleoptions", "OnOff"
-	
 	StaticText " "
 	SafeCommand	"$OPTMNU_DEFAULTS",		"reset2defaults"
 	SafeCommand	"$OPTMNU_RESETTOSAVED",	"reset2saved"
@@ -993,16 +993,13 @@ OptionMenu "VideoOptions" protected
 
 	Submenu "$DSPLYMNU_GLOPT", 			"OpenGLOptions"
 	Submenu "$DSPLYMNU_SWOPT", 			"SWROptions"
+	Submenu "$DSPLYMNU_IMAGEADJUST",	"ImageAdjustMenu"
+	StaticText " "
 	Submenu "$DSPLYMNU_VKOPT",			"VKOptions"
 	Submenu "$GLMNU_TEXOPT", 			"GLTextureGLOptions"
 	Submenu "$GLMNU_DYNLIGHT",			"GLLightOptions"
 	StaticText " "
 	Slider "$DSPLYMNU_SCREENSIZE",				"screenblocks", 				3.0, 12.0, 1.0, 0
-
-	Slider "$DSPLYMNU_GAMMA",					"vid_gamma",					0.75, 3.0, 0.05, 2
-	Slider "$DSPLYMNU_BRIGHTNESS",				"vid_brightness",				-0.8,0.8, 0.05,2
-	Slider "$DSPLYMNU_CONTRAST",				"vid_contrast",	   				0.1, 3.0, 0.1
-	Slider "$DSPLYMNU_SATURATION",				"vid_saturation",  				-3.0, 3.0, 0.25, 2
 	StaticText " "
 	Slider "$DSPLYMNU_FOV",						"fov",							75.0, 120.0, 0.1, 1
 	StaticText " "
@@ -1025,6 +1022,33 @@ OptionMenu "VideoOptions" protected
 	Option "$DSPLYMNU_TELEZOOM",				"telezoom", "OnOff"
 	Slider "$DSPLYMNU_QUAKEINTENSITY",			"r_quakeintensity", 0.0, 1.0, 0.05, 2
 	Option "$DSPLYMNU_NOMONSTERINTERPOLATION",	"nomonsterinterpolation", "NoYes"
+}
+
+OptionMenu "ImageAdjustMenu" protected
+{
+	Title "$DSPLYMNU_IMAGEADJUST"
+	Class "VideoOptions"
+
+	StaticText "$DSPLYMNU_IMAGEADJUST_TOP1", "Cyan"
+	StaticText "$DSPLYMNU_IMAGEADJUST_TOP2", "Cyan"
+	StaticText "$DSPLYMNU_IMAGEADJUST_TOP3", "Cyan"
+	StaticText ""
+	Slider "$DSPLYMNU_GAMMA",		"vid_fixgamma",		-1.0,	1.0,	0.01,	2
+	Tooltip "$DSPLYMNU_TOOLTIP_GAMMA"
+	Slider "$DSPLYMNU_BLACKPOINT",	"vid_blackpoint",	0.0,	0.25,	0.01,	2
+	Tooltip "$DSPLYMNU_TOOLTIP_BLACKPOINT"
+	Slider "$DSPLYMNU_WHITEPOINT",	"vid_whitepoint",	0.75,	1.0,	0.01,	2
+	Tooltip "$DSPLYMNU_TOOLTIP_WHITEPOINT"
+	Command "$OPTMNU_RESETALL",		"vid_reset2defaults"
+	Tooltip "$DSPLYMNU_TOOLTIP_IMAGEADJUST_RESET"
+	Slider "$DSPLYMNU_BRIGHTNESS",	"vid_brightness",	-0.25,	0.25,	0.01,	2
+	Tooltip "$DSPLYMNU_TOOLTIP_BRIGHTNESS"
+	Slider "$DSPLYMNU_CONTRAST",	"vid_contrast",		0.5,	2.0,	0.01,	2
+	Tooltip "$DSPLYMNU_TOOLTIP_CONTRAST"
+	Slider "$DSPLYMNU_SATURATION",	"vid_saturation",	-1.0,	2.0,	0.01,	2
+	Tooltip "$DSPLYMNU_TOOLTIP_SATURATION"
+	StaticText ""
+	StaticText "$DSPLYMNU_IMAGEADJUST_BOTTOM", "Cyan"
 }
 
 //-------------------------------------------------------------------------------------------
@@ -2465,9 +2489,16 @@ OptionMenu ModReplayerOptions protected
 	Tooltip "$ACCMNU_TOOLTIP_EXAMPLE"
 	Option "$ACCMNU_TOOLTIP_CAP", "m_tooltip_capwidth", "OnOff"
 	Tooltip "$ACCMNU_TOOLTIP_EXAMPLE"
-	Option "$ACCMNU_TOOLIP_SCALE", "m_tooltip_small", "OffOn"
+	Option "$ACCMNU_TOOLTIP_SCALE", "m_tooltip_small", "OffOn"
 	Tooltip "$ACCMNU_TOOLTIP_EXAMPLE"
 	Submenu "$HUDMNU_FONTOPTIONS",			"FontOptions"
+	
+	StaticText ""
+	StaticText "$ACCMNU_LIGHT"
+	Slider "$ACCMNU_LIGHT_EXTRA", "r_extralight", -8, 8, 1, 0
+	Tooltip "$ACCMNU_TOOLTIP_LIGHT_EXTRA"
+	Slider "$ACCMNU_LIGHT_RADIUS", "r_visibility", 0.0, 16.0, 1.0, 1
+	Tooltip "$ACCMNU_TOOLTIP_LIGHT_RADIUS"
  }
 
 /*=======================================

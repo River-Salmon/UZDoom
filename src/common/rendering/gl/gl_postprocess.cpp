@@ -37,6 +37,9 @@
 #include "hw_vrmodes.h"
 #include "v_draw.h"
 
+#include "i_time.h"
+#include "g_levellocals.h"
+
 extern bool vid_hdr_active;
 
 CVAR(Int, gl_dither_bpc, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
@@ -58,6 +61,10 @@ void FGLRenderer::PostProcessScene(int fixedcm, float flash, const std::function
 	int sceneHeight = mBuffers->GetSceneHeight();
 
 	GLPPRenderState renderstate(mBuffers);
+
+	renderstate.TimeDelta = static_cast<float>(GetDeltaTime());
+	renderstate.Time = static_cast<float>(screen->FrameTime / 1000.0);
+	renderstate.TimeGame = static_cast<float>(primaryLevel->LocalWorldTimer / (double)GameTicRate);
 
 	hw_postprocess.Pass1(&renderstate, fixedcm, sceneWidth, sceneHeight);
 	mBuffers->BindCurrentFB();
@@ -195,6 +202,8 @@ void FGLRenderer::DrawPresentTexture(const IntRect &box, bool applyGamma)
 		mPresentShader->Uniforms->Contrast = 1.0f;
 		mPresentShader->Uniforms->Brightness = 0.0f;
 		mPresentShader->Uniforms->Saturation = 1.0f;
+		mPresentShader->Uniforms->BlackPoint = 0.0f;
+		mPresentShader->Uniforms->WhitePoint = 1.0f;
 	}
 	else
 	{
@@ -202,6 +211,8 @@ void FGLRenderer::DrawPresentTexture(const IntRect &box, bool applyGamma)
 		mPresentShader->Uniforms->Contrast = clamp<float>(vid_contrast, 0.1f, 3.f);
 		mPresentShader->Uniforms->Brightness = clamp<float>(vid_brightness, -0.8f, 0.8f);
 		mPresentShader->Uniforms->Saturation = clamp<float>(vid_saturation, -15.0f, 15.f);
+		mPresentShader->Uniforms->BlackPoint = clamp<float>(vid_blackpoint, 0.f, 1.f);
+		mPresentShader->Uniforms->WhitePoint = clamp<float>(vid_whitepoint, 0.f, 1.f);
 		mPresentShader->Uniforms->GrayFormula = static_cast<int>(gl_satformula);
 	}
 	if (vid_hdr_active && framebuffer->IsFullscreen())

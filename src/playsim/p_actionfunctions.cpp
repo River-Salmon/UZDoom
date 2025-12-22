@@ -3607,7 +3607,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Warp)
 
 	if ((flags & WARPF_USETID))
 	{
-		reference = self->Level->SingleActorFromTID(destination_selector, self);
+		reference = self->Level->SingleActorFromTID(destination_selector, self->IsClientSide(), self);
 	}
 	else
 	{
@@ -5102,6 +5102,7 @@ static void EnsureModelData(AActor * mobj)
 		
 		ptr->flags = (mobj->hasmodel ? MODELDATA_HADMODEL : 0);
 		ptr->modelDef = nullptr;
+		ptr->ObjectFlags |= (mobj->ObjectFlags & (OF_ClientSide | OF_Transient));
 		
 		mobj->modelData = ptr;
 		mobj->hasmodel = true;
@@ -6424,7 +6425,7 @@ bool SetAnimationInternal(AActor * self, FName animName, double framerate, int s
 	}
 
 	double tic = self->Level->totaltime;
-	if (!WorldPaused() && !self->Level->isFrozen())
+	if (!WorldPaused(true) && !self->Level->isFrozen())
 	{
 		tic += ticFrac;
 	}
@@ -6592,7 +6593,7 @@ void SetAnimationFrameRateInternal(AActor * self, double framerate, double ticFr
 	if(!anims) anims = &self->modelData->anims;
 
 	double tic = self->Level->totaltime;
-	if (!WorldPaused() && !self->Level->isFrozen())
+	if (!WorldPaused(true) && !self->Level->isFrozen())
 	{
 		tic += ticFrac;
 	}
@@ -7309,7 +7310,7 @@ DEFINE_ACTION_FUNCTION(AActor, FindAnimationFrameUI)
 	float inter = -1;
 
 	double tic = self->Level->totaltime;
-	if (!WorldPaused() && !self->Level->isFrozen())
+	if (!WorldPaused(true) && !self->Level->isFrozen())
 	{
 		tic += I_GetTimeFrac();
 	}

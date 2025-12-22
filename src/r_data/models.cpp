@@ -72,9 +72,10 @@ void RenderModel(FModelRenderer *renderer, float x, float y, float z, FSpriteMod
 
 	VSMatrix objectToWorldMatrix = smf->ObjectToWorldMatrix(actor, x, y, z, ticFrac);
 
-	float scaleFactorX = actor->Scale.X * smf->xscale;
-	float scaleFactorY = actor->Scale.X * smf->yscale;
-	float scaleFactorZ = actor->Scale.Y * smf->zscale;
+	const DVector2 scale = actor->InterpolatedScale(ticFrac);
+	float scaleFactorX = scale.X * smf->xscale;
+	float scaleFactorY = scale.X * smf->yscale;
+	float scaleFactorZ = scale.Y * smf->zscale;
 	float orientation = scaleFactorX * scaleFactorY * scaleFactorZ;
 
 	renderer->BeginDrawModel(actor->RenderStyle, smf_flags, objectToWorldMatrix, orientation < 0);
@@ -134,12 +135,12 @@ VSMatrix FSpriteModelFrame::ObjectToWorldMatrix(AActor * actor, float x, float y
 
 	double tic = actor->Level->totaltime;
 
-	if (!WorldPaused() && !actor->isFrozen())
+	if (!WorldPaused(true) && !actor->isFrozen())
 	{
 		tic += ticFrac;
 	}
 
-	return ObjectToWorldMatrix(actor->Level, DVector3(x, y, z), DRotator(DAngle::fromDeg(pitch), DAngle::fromDeg(angle), DAngle::fromDeg(roll)), actor->Scale, smf_flags, tic);
+	return ObjectToWorldMatrix(actor->Level, DVector3(x, y, z), DRotator(DAngle::fromDeg(pitch), DAngle::fromDeg(angle), DAngle::fromDeg(roll)), actor->InterpolatedScale(ticFrac), smf_flags, tic);
 }
 
 VSMatrix FSpriteModelFrame::ObjectToWorldMatrix(FLevelLocals *Level, DVector3 translation, DRotator rotation, DVector2 scaling, unsigned int flags, double tic)
@@ -396,7 +397,7 @@ CalcModelFrameInfo CalcModelFrame(FLevelLocals *Level, const FSpriteModelFrame *
 			// [BB] To interpolate at more than 35 fps we take tic fractions into account.
 			float ticFraction = 0.;
 			// [BB] In case the tic counter is frozen we have to leave ticFraction at zero.
-			if (!WorldPaused() && !Level->isFrozen())
+			if (!WorldPaused(true) && !Level->isFrozen())
 			{
 				ticFraction = ticFrac;
 			}
@@ -632,9 +633,9 @@ static inline void RenderModelFrame(FModelRenderer *renderer, int i, const FSpri
 
 		if(frameinfo.smf_flags & MDL_MODELSAREATTACHMENTS || is_decoupled)
 		{
-			if(!boneData)
+			if(!boneData && is_decoupled)
 			{
-				boneData = mdl->GetBasePose();
+				boneData = mdl->CalculateBonesOnlyOffsets((modelData && modelData->modelBoneOverrides.SSize() > i)? &modelData->modelBoneOverrides[i] : nullptr, tic);
 			}
 
 			boneStartingPosition = boneData ? screen->mBones->UploadBones(*boneData) : -1;
@@ -648,7 +649,7 @@ static inline void RenderModelFrame(FModelRenderer *renderer, int i, const FSpri
 void RenderFrameModels(FModelRenderer *renderer, FLevelLocals *Level, const FSpriteModelFrame *smf, const FState *curState, int curTics, double ticFrac, FTranslationID translation, AActor* actor)
 {
 	double tic = actor->Level->totaltime;
-	if (!WorldPaused() && !actor->isFrozen())
+	if (!WorldPaused(true) && !actor->isFrozen())
 	{
 		tic += ticFrac;
 	}
