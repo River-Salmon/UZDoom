@@ -1,24 +1,33 @@
-//-----------------------------------------------------------------------------
-//
-// Copyright 1993-1996 id Software
-// Copyright 1994-1996 Raven Software
-// Copyright 1999-2016 Randy Heit
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
-//
-//-----------------------------------------------------------------------------
-//
+/*
+** ct_chat.cpp
+**
+**
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 1993-1996 id Software
+** Copyright 1994-1996 Raven Software
+** Copyright 1999-2016 Marisa Heit
+** Copyright 2007-2016 Christoph Oelckers
+** Copyright 2017-2025 GZDoom Maintainers and Contributors
+** Copyright 2025 UZDoom Maintainers and Contributors
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+**
+**---------------------------------------------------------------------------
+**
+*/
 
 
 #include <string.h>
@@ -240,25 +249,25 @@ void CT_PasteChat(const char *clip)
 //
 //===========================================================================
 
+static int IsScoreboardOpen()
+{
+	return buttonMap.ButtonDown(Button_ShowScores) || bScoreboardToggled;
+}
+
+DEFINE_ACTION_FUNCTION_NATIVE(DBaseStatusBar, IsScoreboardOpen, IsScoreboardOpen)
+{
+	PARAM_PROLOGUE;
+	ACTION_RETURN_BOOL(IsScoreboardOpen());
+}
+
 void CT_Drawer (void)
 {
 	auto &vp = r_viewpoint;
 	auto drawer = twod;
 	FFont *displayfont = NewConsoleFont;
 
-	if (players[consoleplayer].camera != NULL &&
-		(buttonMap.ButtonDown(Button_ShowScores) ||
-		 players[consoleplayer].playerstate == PST_DEAD ||
-		 bScoreboardToggled))
-	{
-		bool skipit = false;
-		if (gamestate != GS_LEVEL)
-		{
-			bScoreboardToggled = false;
-			skipit = true;
-		}
-		if (!skipit) HU_DrawScores (vp.TicFrac);
-	}
+	HU_DrawScores(vp.TicFrac);
+
 	if (chatmodeon)
 	{
 		// [MK] allow the status bar to take over chat prompt drawing

@@ -1,10 +1,13 @@
 /*
 ** listmenu.zs
+**
 ** The main menu class
 **
 **---------------------------------------------------------------------------
+**
 ** Copyright 2010-2020 Christoph Oelckers
-** All rights reserved.
+** Copyright 2017-2025 GZDoom Maintainers and Contributors
+** Copyright 2025 UZDoom Maintainers and Contributors
 **
 ** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions
@@ -28,11 +31,10 @@
 ** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**
 **---------------------------------------------------------------------------
 **
 */
-
-
 
 class ListMenuDescriptor : MenuDescriptor native
 {
@@ -137,8 +139,7 @@ class ListMenu : Menu
 			}
 		}
 
-		if (mDesc.mSelectedItem >= 0)
-			UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+		UpdateTooltip(GetSelectedTooltip());
 	}
 
 	//=============================================================================
@@ -177,7 +178,7 @@ class ListMenu : Menu
 				if (mDesc.mitems[i].Selectable() && mDesc.mItems[i].CheckHotkey(ch))
 				{
 					mDesc.mSelectedItem = i;
-					UpdateTooltip(mDesc.mitems[mDesc.mSelectedItem].GetTooltip());
+					UpdateTooltip(GetSelectedTooltip());
 					MenuSound("menu/cursor");
 					return true;
 				}
@@ -187,7 +188,7 @@ class ListMenu : Menu
 				if (mDesc.mitems[i].Selectable() && mDesc.mItems[i].CheckHotkey(ch))
 				{
 					mDesc.mSelectedItem = i;
-					UpdateTooltip(mDesc.mitems[mDesc.mSelectedItem].GetTooltip());
+					UpdateTooltip(GetSelectedTooltip());
 					MenuSound("menu/cursor");
 					return true;
 				}
@@ -217,7 +218,7 @@ class ListMenu : Menu
 			}
 			while (!mDesc.mItems[mDesc.mSelectedItem].Selectable() && mDesc.mSelectedItem != startedAt);
 			if (mDesc.mSelectedItem == startedAt) mDesc.mSelectedItem = oldSelect;
-			else UpdateTooltip(mDesc.mitems[mDesc.mSelectedItem].GetTooltip());
+			else UpdateTooltip(GetSelectedTooltip());
 			MenuSound("menu/cursor");
 			return true;
 
@@ -229,7 +230,7 @@ class ListMenu : Menu
 			}
 			while (!mDesc.mItems[mDesc.mSelectedItem].Selectable() && mDesc.mSelectedItem != startedAt);
 			if (mDesc.mSelectedItem == startedAt) mDesc.mSelectedItem = oldSelect;
-			else UpdateTooltip(mDesc.mitems[mDesc.mSelectedItem].GetTooltip());
+			else UpdateTooltip(GetSelectedTooltip());
 			MenuSound("menu/cursor");
 			return true;
 
@@ -293,7 +294,7 @@ class ListMenu : Menu
 							//MenuSound("menu/cursor");
 						}
 						mDesc.mSelectedItem = i;
-						UpdateTooltip(mDesc.mitems[mDesc.mSelectedItem].GetTooltip());
+						UpdateTooltip(GetSelectedTooltip());
 						mDesc.mItems[i].MouseEvent(type, x, y);
 						return true;
 					}
@@ -387,6 +388,19 @@ class ListMenu : Menu
 			}
 		}
 		mDesc.mLineSpacing = newspace;
+	}
+
+	//=============================================================================
+	//
+	//
+	//
+	//=============================================================================
+
+	version("4.15.1") string GetSelectedTooltip() const
+	{
+		return mDesc && mDesc.mSelectedItem >= 0 && mDesc.mSelectedItem < mDesc.mItems.Size() && mDesc.mItems[mDesc.mSelectedItem]
+				? mDesc.mItems[mDesc.mSelectedItem].GetTooltip()
+				: "";
 	}
 }
 

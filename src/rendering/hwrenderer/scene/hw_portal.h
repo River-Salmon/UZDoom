@@ -1,3 +1,31 @@
+/*
+** hw_portal.h
+**
+** portal maintenance classes for skyboxes, horizons etc. (API independent parts)
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2004-2018 Christoph Oelckers
+** Copyright 2017-2025 GZDoom Maintainers and Contributors
+** Copyright 2025 UZDoom Maintainers and Contributors
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #pragma once
 
 #include "tarray.h"
@@ -78,7 +106,7 @@ public:
 	virtual void * GetSource() const = 0;	// GetSource MUST be implemented!
 	virtual const char *GetName() = 0;
 	virtual bool AllowSSAO() { return true; }
-	virtual bool IsSky() { return false; }
+	virtual bool IsSky(HWDrawInfo *di) { return false; }
 	virtual bool NeedCap() { return true; }
 	virtual bool NeedDepthBuffer() { return true; }
 	virtual void DrawContents(HWDrawInfo *di, FRenderState &state) = 0;
@@ -251,7 +279,7 @@ protected:
 	bool Setup(HWDrawInfo *di, FRenderState &rstate, Clipper *clipper) override;
 	void Shutdown(HWDrawInfo *di, FRenderState &rstate) override;
 	virtual void * GetSource() const { return portal; }
-	virtual bool IsSky() { return true; }
+	virtual bool IsSky(HWDrawInfo *di) { return true; }
 	virtual const char *GetName();
 	virtual bool AllowSSAO() override;
 
@@ -274,7 +302,7 @@ protected:
 	void DrawPortalStencil(FRenderState &state, int pass) override;
 	void Shutdown(HWDrawInfo *di, FRenderState &rstate) override;
 	virtual void * GetSource() const { return origin; }
-	virtual bool IsSky() { return true; }	// although this isn't a real sky it can be handled as one.
+	bool IsSky(HWDrawInfo *di) override;
 	virtual const char *GetName();
 	FSectorPortalGroup *origin;
 
@@ -311,6 +339,7 @@ public:
 	{
 		origin = pt;
 	}
+	void SetupCoverage(HWDrawInfo *di);
 
 };
 
@@ -363,7 +392,7 @@ struct HWSkyPortal : public HWPortal
 protected:
 	virtual void DrawContents(HWDrawInfo *di, FRenderState &state);
 	virtual void * GetSource() const { return origin; }
-	virtual bool IsSky() { return true; }
+	virtual bool IsSky(HWDrawInfo *di) { return true; }
 	virtual bool NeedDepthBuffer() { return false; }
 	virtual const char *GetName();
 

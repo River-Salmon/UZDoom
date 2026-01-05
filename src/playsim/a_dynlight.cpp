@@ -1,34 +1,32 @@
-// 
-//---------------------------------------------------------------------------
-//
-// Copyright 2004-2016 Christoph Oelckers
-// Copyright 2017-2025 GZDoom Maintainers and Contributors
-// All rights reserved.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
-//
-//--------------------------------------------------------------------------
-//
 /*
 ** a_dynlight.cpp
+**
 ** Implements actors representing dynamic lights (hardware independent)
 **
+**---------------------------------------------------------------------------
+**
+** Copyright 2004-2016 Christoph Oelckers
+** Copyright 2017-2025 GZDoom Maintainers and Contributors
+** Copyright 2025 UZDoom Maintainers and Contributors
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+**
+**---------------------------------------------------------------------------
 **
 ** all functions marked with [TS] are licensed under
-**---------------------------------------------------------------------------
+**
 ** Copyright 2003 Timothy Stump
-** All rights reserved.
 **
 ** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions
@@ -52,6 +50,7 @@
 ** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**
 **---------------------------------------------------------------------------
 **
 */
@@ -110,6 +109,7 @@ static FDynamicLight *GetLight(FLevelLocals *Level)
 
 void AttachLight(AActor *self)
 {
+	if(self->ObjectFlags & OF_EuthanizeMe) return;
 	auto light = GetLight(self->Level);
 
 	light->pSpotInnerAngle = &self->AngleVar(NAME_SpotInnerAngle);
@@ -713,6 +713,8 @@ void FDynamicLight::UnlinkLight()
 
 void AActor::AttachLight(unsigned int count, const FLightDefaults *lightdef)
 {
+	if(ObjectFlags & OF_EuthanizeMe) return;
+
 	FDynamicLight *light;
 
 	if (count < AttachedLights.Size()) 
@@ -817,6 +819,8 @@ unsigned FindUserLight(AActor *self, FName id, bool create = false)
 
 int AttachLightDef(AActor *self, int _lightid, int _lightname)
 {
+	if(self->ObjectFlags & OF_EuthanizeMe) return 0;
+
 	FName lightid = FName(ENamedName(_lightid));
 	FName lightname = FName(ENamedName(_lightname));
 	
@@ -851,6 +855,8 @@ DEFINE_ACTION_FUNCTION_NATIVE(AActor, A_AttachLightDef, AttachLightDef)
 
 int AttachLightDirect(AActor *self, int _lightid, int type, int color, int radius1, int radius2, int flags, double ofs_x, double ofs_y, double ofs_z, double param, double spoti, double spoto, double spotp, double intensity)
 {
+	if(self->ObjectFlags & OF_EuthanizeMe) return 0;
+
 	FName lightid = FName(ENamedName(_lightid));
 	auto userlight = self->UserLights[FindUserLight(self, lightid, true)];
 	userlight->SetType(ELightType(type));

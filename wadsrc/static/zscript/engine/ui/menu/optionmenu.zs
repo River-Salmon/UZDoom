@@ -1,11 +1,13 @@
 /*
 ** optionmenu.zs
+**
 ** Handler class for the option menus and associated items
 **
 **---------------------------------------------------------------------------
+**
 ** Copyright 2010-2017 Christoph Oelckers
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** All rights reserved.
+** Copyright 2025 UZDoom Maintainers and Contributors
 **
 ** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions
@@ -29,6 +31,7 @@
 ** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+**
 **---------------------------------------------------------------------------
 **
 */
@@ -185,8 +188,7 @@ class OptionMenu : Menu
 			}
 		}
 
-		if (mDesc.mSelectedItem >= 0 && mDesc.mSelectedItem < mDesc.mItems.Size())
-			UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+		UpdateTooltip(GetSelectedTooltip());
 	}
 
 	//=============================================================================
@@ -194,6 +196,13 @@ class OptionMenu : Menu
 	//
 	//
 	//=============================================================================
+
+	version("4.15.1") string GetSelectedTooltip() const
+	{
+		return mDesc && mDesc.mSelectedItem >= 0 && mDesc.mSelectedItem < mDesc.mItems.Size() && mDesc.mItems[mDesc.mSelectedItem]
+				? mDesc.mItems[mDesc.mSelectedItem].GetTooltip()
+				: "";
+	}
 
 	override void UpdateTooltip(string tooltip)
 	{
@@ -446,7 +455,7 @@ class OptionMenu : Menu
 				if (firstLabelCharacter == key)
 				{
 					mDesc.mSelectedItem = index;
-					UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+					UpdateTooltip(GetSelectedTooltip());
 					break;
 				}
 			}
@@ -488,7 +497,7 @@ class OptionMenu : Menu
 				mDesc.mSelectedItem = FirstSelectable();
 			}
 
-			UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+			UpdateTooltip(GetSelectedTooltip());
 			return mDesc.mSelectedItem - startedAt;
 		}
 
@@ -632,7 +641,7 @@ class OptionMenu : Menu
 			}
 		}
 
-		UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+		UpdateTooltip(GetSelectedTooltip());
 		return mDesc.mSelectedItem - startedAt;
 	}
 
@@ -730,7 +739,7 @@ class OptionMenu : Menu
 			}
 		}
 
-		UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+		UpdateTooltip(GetSelectedTooltip());
 		return mDesc.mSelectedItem - startedAt;
 	}
 
@@ -841,7 +850,7 @@ class OptionMenu : Menu
 						if (i != mDesc.mSelectedItem)
 						{
 							mDesc.mSelectedItem = i;
-							UpdateTooltip(mDesc.mItems[mDesc.mSelectedItem].GetTooltip());
+							UpdateTooltip(GetSelectedTooltip());
 							if (HoverSound) MenuSound ("menu/cursor");
 						}
 						mDesc.mItems[i].MouseEvent(type, x, y);

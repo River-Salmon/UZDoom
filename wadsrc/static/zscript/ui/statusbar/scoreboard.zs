@@ -1,3 +1,32 @@
+/*
+** scoreboard.zs
+**
+**
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 1993-1996 id Software
+** Copyright 1999-2016 Marisa Heit
+** Copyright 2006-2016 Christoph Oelckers
+** Copyright 2017-2025 GZDoom Maintainers and Contributors
+** Copyright 2025 UZDoom Maintainers and Contributors
+**
+** This program is free software: you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation, either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+**
+**---------------------------------------------------------------------------
+**
+*/
 
 extend class BaseStatusBar
 {
@@ -5,8 +34,10 @@ extend class BaseStatusBar
 	const MAX_TEAM_SCORE_ROWS = 2;
 	const SCOREBOARD_PADDING = 5;
 
-	Font ScoreboardFont;
-	Font BigScoreboardFont;
+	native Font ScoreboardFont;
+	native Font BigScoreboardFont;
+
+	native static bool IsScoreboardOpen();
 
     static clearscope int ComparePlayerPoints(int playerA, int playerB)
     {
@@ -114,36 +145,40 @@ extend class BaseStatusBar
 		BigScoreboardFont = BigFont;
 	}
 
-    version("4.15.1") virtual void DrawScoreboard(double ticFrac)
+    version("4.15.1") virtual bool DrawScoreboard(double ticFrac)
     {
-		if (!ScoreboardFont)
-			return;
+		if (!ScoreboardFont || GameState != GS_LEVEL || !CPlayer
+			|| (CPlayer.PlayerState != PST_DEAD && !IsScoreboardOpen()))
+		{
+			return false;
+		}
 
 	    if (deathmatch)
 	    {
 		    if (teamplay)
 		    {
 			    if(!sb_teamdeathmatch_enable)
-				    return;
+				    return false;
 		    }
 		    else if (!sb_deathmatch_enable)
 		    {
-			    return;
+			    return false;
 		    }
 	    }
 	    else if (!multiplayer || !sb_cooperative_enable)
 	    {
-		    return;
+		    return false;
 	    }
 
-		DrawRemainingTime();
+		DrawRemainingTime(ticFrac);
         
         Array<int> sortedPlayers;
 		SortScoreboardPlayers(sortedPlayers, ComparePlayerPoints);
-		DrawPlayerScores(sortedPlayers);
+		DrawPlayerScores(sortedPlayers, ticFrac);
+		return true;
     }
 
-	version("4.15.1") virtual void DrawRemainingTime()
+	version("4.15.1") virtual void DrawRemainingTime(double ticFrac)
 	{
 		if (!deathmatch || timelimit <= 0.0 || GameState != GS_LEVEL)
 			return;
@@ -164,7 +199,7 @@ extend class BaseStatusBar
 		DrawScoreboardText(ScoreboardFont, Font.CR_WHITE, Screen.GetWidth() / 2, GetTopOfStatusBar() - 5 * CleanYFac_1, timer, -0.5, -1.0);
 	}
 	
-	version("4.15.1") virtual void DrawPlayerScores(Array<int> sortedPlayers)
+	version("4.15.1") virtual void DrawPlayerScores(Array<int> sortedPlayers, double ticFrac)
 	{
 		int col = sb_cooperative_headingcolor;
 		if (deathmatch)
@@ -181,7 +216,7 @@ extend class BaseStatusBar
 		iconWidth *= CleanXFac_1;
 		iconHeight *= CleanYFac_1;
 		// Lock the scoreboard to 4:3 to make it more readable on widescreens.
-		int scoreboardWidth = int(Screen.GetHeight() * (4.0 / 3.0)) - 100 * CleanXFac_1;
+		int scoreboardWidth = int(Screen.GetHeight() * (4.0 / 3.0)) - 150 * CleanXFac_1;
 		int rowHeight = Max(iconHeight, ScoreboardFont.GetHeight() * CleanYFac_1) + yPadding * 2;
 		int rowCenter = rowHeight / 2;
 
@@ -251,7 +286,7 @@ extend class BaseStatusBar
 			text = String.Format("%d", deathmatch ? player.FragCount : player.KillCount);
 			DrawScoreboardText(ScoreboardFont, Font.CR_WHITE, x + latencyOfs - xPadding, y, text, -1.0, -0.5);
 
-			text = String.Format("%d", player.GetAverageLatency());
+			text = String.Format("%dms", player.GetAverageLatency());
 			DrawScoreboardText(ScoreboardFont, Font.CR_WHITE, x + scoreboardWidth - xPadding, y, text, -1.0, -0.5);
 
 			y += rowHeight;
