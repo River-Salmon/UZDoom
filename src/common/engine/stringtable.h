@@ -101,8 +101,9 @@ public:
 	void InsertString(int filenum, int langid, FName label, const FString& string);
 	void SetDefaultGender(int gender) { defaultgender = gender; }
 
-private:
+	[[nodiscard]] FString GetActiveLanguage() const { return activeLanguage; }
 
+private:
 	FString activeLanguage;
 	StringMacroMap allMacros;
 	LangMap allStrings;
