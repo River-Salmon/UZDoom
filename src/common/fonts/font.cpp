@@ -111,6 +111,10 @@ CVAR(String, fontchoice_smalltextKO, "IBMPLEXK", CVAR_ARCHIVE);
 CVAR(String, fontchoice_titleKO, "IBMPLEXK", CVAR_ARCHIVE);
 CVAR(String, fontchoice_descriptionKO, "IBMPLEXK", CVAR_ARCHIVE);
 
+CVAR(String, fontchoice_smalltextCYR, "HACK-BO", CVAR_ARCHIVE);
+CVAR(String, fontchoice_titleCYR, "HACK-BO", CVAR_ARCHIVE);
+CVAR(String, fontchoice_descriptionCYR, "HACK-BO", CVAR_ARCHIVE);
+
 //actually overriding the font directly will become a last resort option
 //if you are having mod compatibility issues.
 void SetNewSmallFontOverride(const char *newFont);
@@ -785,6 +789,10 @@ FFont *FFont::GetSmallTextFont(FFont* fallbackIfNoUserChoice)
 	{
 		userFont = V_GetFont(*fontchoice_smalltextKO);
 	}
+	else if (lang.CompareNoCase("ru") == 0 || lang.CompareNoCase("sr") == 0)
+	{
+		userFont = V_GetFont(*fontchoice_smalltextCYR);
+	}
 
 	if (userFont)
 	{
@@ -806,6 +814,10 @@ FFont *FFont::GetTitleFont(FFont *fallbackIfNoUserChoice)
 	{
 		userFont = V_GetFont(*fontchoice_titleKO);
 	}
+	else if (lang.CompareNoCase("ru") == 0 || lang.CompareNoCase("sr") == 0)
+	{
+		userFont = V_GetFont(*fontchoice_smalltextCYR);
+	}
 
 	if (userFont)
 	{
@@ -826,6 +838,10 @@ FFont *FFont::GetDescriptionFont(FFont *fallbackIfNoUserChoice)
 	else if (lang.CompareNoCase("ko") == 0)
 	{
 		userFont = V_GetFont(*fontchoice_descriptionKO);
+	}
+	else if (lang.CompareNoCase("ru") == 0 || lang.CompareNoCase("sr") == 0)
+	{
+		userFont = V_GetFont(*fontchoice_smalltextCYR);
 	}
 
 	if (userFont)
@@ -1253,11 +1269,14 @@ int FFont::StringWidth(const uint8_t *string, int spacing) const
 {
 	if (IsValidDynamicFont())
 	{
+		const FFont *const ourFont  = CanPrint(string) ? this : GetDynamicFontFallback();
+		assert(ourFont);
 		FString fString          = FString::RemoveColorTags(FString((const char *)string));
-		auto &shaper = *DynamicTextShaper;
+		auto &shaper = *ourFont->DynamicTextShaper;
 		auto    utf8span = std::span<const char>(fString.GetChars(), fString.Len());
 		auto glyphs = shaper.ShapeUtf8(utf8span);
-		return Trex::TextShaper::Measure(glyphs).width * InvSupersampleFactor;
+		auto    measurement      = Trex::TextShaper::Measure(glyphs).width * (float)InvSupersampleFactor;
+		return std::ceil(measurement);
 	}
 
 	int w = 0;
