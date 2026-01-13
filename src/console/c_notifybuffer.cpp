@@ -149,10 +149,6 @@ void FNotifyBuffer::Draw()
 				color = PrintColors[notify.PrintLevel];
 
 			int scale = active_con_scaletext(twod, generic_ui);
-			if (font->IsValidDynamicFont())
-			{
-				scale = 1;
-			}
 			int w = twod->GetWidth();
 			int h = twod->GetHeight();
 			if (!center)
