@@ -135,13 +135,8 @@ public:
 	int GetMaxAscender(const FString &text) const { return GetMaxAscender((uint8_t*)text.GetChars()); }
 	virtual void LoadTranslations();
 	FName GetName() const { return FontName; }
-	void SetDynamicFallback(FFont *const fallbackFont)
-	{
-		DynamicFontFallback = fallbackFont;
-	}
 
 	static FFont *FindFont(FName fontname);
-	static void   UpdateFontDynamicFallbacks(const char* lang);
 
 	//standard font choices
 	//TODO: this seems not super extensible - what if mods want to add semantic font choices?
@@ -212,11 +207,6 @@ public:
 		return DynamicTextShaper;
 	}
 
-	inline FFont *GetDynamicFontFallback() const
-	{
-		return DynamicFontFallback;
-	}
-
 	FFont *GetDynamicFontFallbackForChar32(char32_t srcChar) const;
 
 	friend void V_InitCustomFonts();
@@ -278,10 +268,6 @@ protected:
 	Trex::TextShaper *DynamicTextShaper             = nullptr;
 	FGameTexture *DynamicFontAtlasTexture = nullptr;
 	double        InvSupersampleFactor          = 1.0 / 3.0;
-
-	//when using dynamic fonts, if CanPrint indicates that a string is unable to be rendered
-	//using the current font, we attempt to render it with this one instead.
-	FFont        *DynamicFontFallback     = nullptr;
 	//DYNAMIC FONTS
 
 	static FFont *FirstFont;
