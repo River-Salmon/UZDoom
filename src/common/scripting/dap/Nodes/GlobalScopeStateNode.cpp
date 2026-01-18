@@ -49,6 +49,7 @@ static const char *const GlobalNames[] = {
 	"SmallFont",
 	"SmallFont2",
 	"BigFont",
+	"BigUpper",
 	"ConFont",
 	"NewConsoleFont",
 	"NewSmallFont",
