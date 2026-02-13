@@ -7,20 +7,9 @@
 **
 ** Copyright 2014-2016 Christoph Oelckers
 ** Copyright 2022-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** This program is free software: you can redistribute it and/or modify
-** it under the terms of the GNU Lesser General Public License as published by
-** the Free Software Foundation, either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU Lesser General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
 **---------------------------------------------------------------------------
 **
@@ -874,13 +863,11 @@ const TArray<VSMatrix>* IQMModel::CalculateBonesIQM(int frame1, int frame2, floa
 	}
 }
 
-const TArray<VSMatrix>* IQMModel::CalculateBonesOnlyOffsets(TArray<BoneOverride> *in, double time)
+const TArray<VSMatrix>* IQMModel::CalculateBonesOnlyOffsets(TArray<BoneOverride> *in, BoneInfo *out, double time)
 {
 	int numbones = Joints.SSize();
 
 	if(numbones <= 0) return nullptr;
-
-	boneData.Resize(numbones);
 
 	constexpr const float swapYZ[16]
 	{
@@ -892,41 +879,109 @@ const TArray<VSMatrix>* IQMModel::CalculateBonesOnlyOffsets(TArray<BoneOverride>
 	
 	if(in)
 	{
-		for (int i = 0; i < numbones; i++)
+		if(out)
 		{
-			TRS bone;
+			out->bones.Resize(numbones);
+			out->bones_with_override.Resize(numbones);
+			out->positions.Resize(numbones);
+			out->positions_with_override.Resize(numbones);
 
-			(*in)[i].Modify(bone, time);
-
-			VSMatrix m;
-			m.loadIdentity();
-			m.translate(bone.translation.X, bone.translation.Y, bone.translation.Z);
-			m.multQuaternion(bone.rotation);
-			m.scale(bone.scaling.X, bone.scaling.Y, bone.scaling.Z);
-
-			VSMatrix& result = boneData[i];
-			if (Joints[i].Parent >= 0)
+			for (int i = 0; i < numbones; i++)
 			{
-				result = boneData[Joints[i].Parent];
+				TRS bone;
+
+				out->bones[i] = {};
+
+				(*in)[i].Modify(bone, time);
+
+				out->bones_with_override[i] = bone;
+
+				out->positions[i].loadIdentity();
+				
+				VSMatrix m;
+				m.loadIdentity();
+				m.translate(bone.translation.X, bone.translation.Y, bone.translation.Z);
+				m.multQuaternion(bone.rotation);
+				m.scale(bone.scaling.X, bone.scaling.Y, bone.scaling.Z);
+
+				VSMatrix& result = out->positions_with_override[i];
+				if (Joints[i].Parent >= 0)
+				{
+					result = out->positions_with_override[Joints[i].Parent];
+					result.multMatrix(swapYZ);
+					result.multMatrix(baseframe[Joints[i].Parent]);
+					result.multMatrix(m);
+					result.multMatrix(inversebaseframe[i]);
+				}
+				else
+				{
+					result.loadMatrix(swapYZ);
+					result.multMatrix(m);
+					result.multMatrix(inversebaseframe[i]);
+				}
 				result.multMatrix(swapYZ);
-				result.multMatrix(baseframe[Joints[i].Parent]);
-				result.multMatrix(m);
-				result.multMatrix(inversebaseframe[i]);
 			}
-			else
+		}
+		else
+		{
+			boneData.Resize(numbones);
+
+			for (int i = 0; i < numbones; i++)
 			{
-				result.loadMatrix(swapYZ);
-				result.multMatrix(m);
-				result.multMatrix(inversebaseframe[i]);
+				TRS bone;
+
+				(*in)[i].Modify(bone, time);
+
+				VSMatrix m;
+				m.loadIdentity();
+				m.translate(bone.translation.X, bone.translation.Y, bone.translation.Z);
+				m.multQuaternion(bone.rotation);
+				m.scale(bone.scaling.X, bone.scaling.Y, bone.scaling.Z);
+
+				VSMatrix& result = boneData[i];
+				if (Joints[i].Parent >= 0)
+				{
+					result = boneData[Joints[i].Parent];
+					result.multMatrix(swapYZ);
+					result.multMatrix(baseframe[Joints[i].Parent]);
+					result.multMatrix(m);
+					result.multMatrix(inversebaseframe[i]);
+				}
+				else
+				{
+					result.loadMatrix(swapYZ);
+					result.multMatrix(m);
+					result.multMatrix(inversebaseframe[i]);
+				}
+				result.multMatrix(swapYZ);
 			}
-			result.multMatrix(swapYZ);
 		}
 	}
 	else
 	{
-		for (int i = 0; i < numbones; i++)
+		if(out)
 		{
-			boneData[i].loadIdentity();
+			out->bones.Resize(numbones);
+			out->bones_with_override.Resize(numbones);
+			out->positions.Resize(numbones);
+			out->positions_with_override.Resize(numbones);
+
+			for (int i = 0; i < numbones; i++)
+			{
+				out->bones[i] = {};
+				out->bones_with_override[i] = {};
+				out->positions[i].loadIdentity();
+				out->positions_with_override[i].loadIdentity();
+			}
+		}
+		else
+		{
+			boneData.Resize(numbones);
+
+			for (int i = 0; i < numbones; i++)
+			{
+				boneData[i].loadIdentity();
+			}
 		}
 	}
 

@@ -7,20 +7,9 @@
 **
 ** Copyright 2005-2016 Christoph Oelckers
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** This program is free software: you can redistribute it and/or modify
-** it under the terms of the GNU Lesser General Public License as published by
-** the Free Software Foundation, either version 3 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU Lesser General Public License for more details.
-**
-** You should have received a copy of the GNU Lesser General Public License
-** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
 **---------------------------------------------------------------------------
 **
@@ -584,7 +573,16 @@ const TArray<VSMatrix> * ProcessModelFrame(FModel * animation, bool nextFrame, i
 				frameinfo.decoupled_frame,
 				frameinfo.inter,
 				animationData,
-				modelData->modelBoneOverrides.SSize() > i
+				(modelData && modelData->modelBoneOverrides.SSize() > i)
+				? &modelData->modelBoneOverrides[i]
+				: nullptr,
+				out,
+				tic);
+		}
+		else
+		{
+			boneData = animation->CalculateBonesOnlyOffsets(
+				(modelData && modelData->modelBoneOverrides.SSize() > i)
 				? &modelData->modelBoneOverrides[i]
 				: nullptr,
 				out,
@@ -633,7 +631,7 @@ static inline void RenderModelFrame(FModelRenderer *renderer, int i, const FSpri
 		{
 			if(!boneData && is_decoupled)
 			{
-				boneData = mdl->CalculateBonesOnlyOffsets((modelData && modelData->modelBoneOverrides.SSize() > i)? &modelData->modelBoneOverrides[i] : nullptr, tic);
+				boneData = mdl->CalculateBonesOnlyOffsets((modelData && modelData->modelBoneOverrides.SSize() > i)? &modelData->modelBoneOverrides[i] : nullptr, nullptr, tic);
 			}
 
 			boneStartingPosition = boneData ? screen->mBones->UploadBones(*boneData) : -1;

@@ -6,40 +6,15 @@
 **---------------------------------------------------------------------------
 **
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** This program is free software: you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation, either version 3 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
 **---------------------------------------------------------------------------
 **
 ** Copyright 2016-2020 Magnus Norddahl
 **
-** This software is provided 'as-is', without any express or implied
-** warranty.  In no event will the authors be held liable for any damages
-** arising from the use of this software.
-**
-** Permission is granted to anyone to use this software for any purpose,
-** including commercial applications, and to alter it and redistribute it
-** freely, subject to the following restrictions:
-**
-** 1. The origin of this software must not be misrepresented; you must not
-**    claim that you wrote the original software. If you use this software
-**    in a product, an acknowledgment in the product documentation would be
-**    appreciated but is not required.
-** 2. Altered source versions must be plainly marked as such, and must not be
-**    misrepresented as being the original software.
-** 3. This notice may not be removed or altered from any source distribution.
+** SPDX-License-Identifier: Zlib
 **
 **---------------------------------------------------------------------------
 **
@@ -282,7 +257,6 @@ void VkPostprocess::DrawPresentTexture(const IntRect &box, bool applyGamma, bool
 	{
 		uniforms.InvGamma = 1.0f;
 		uniforms.Contrast = 1.0f;
-		uniforms.Brightness = 0.0f;
 		uniforms.Saturation = 1.0f;
 		uniforms.BlackPoint = 0.0f;
 		uniforms.WhitePoint = 1.0f;
@@ -291,12 +265,12 @@ void VkPostprocess::DrawPresentTexture(const IntRect &box, bool applyGamma, bool
 	{
 		uniforms.InvGamma = 1.0f / clamp<float>(vid_gamma, 0.1f, 4.f);
 		uniforms.Contrast = clamp<float>(vid_contrast, 0.1f, 3.f);
-		uniforms.Brightness = clamp<float>(vid_brightness, -0.8f, 0.8f);
 		uniforms.Saturation = clamp<float>(vid_saturation, -15.0f, 15.f);
-		uniforms.BlackPoint = clamp<float>(vid_blackpoint, 0.f, 1.f);
-		uniforms.WhitePoint = clamp<float>(vid_whitepoint, 0.f, 1.f);
+		uniforms.BlackPoint = clamp<float>(vid_i_blackpoint, 0.f, 1.f);
+		uniforms.WhitePoint = clamp<float>(vid_i_whitepoint, 0.f, 5.f);
 		uniforms.GrayFormula = static_cast<int>(gl_satformula);
 	}
+
 	uniforms.ColorScale = (gl_dither_bpc == -1) ? 255.0f : (float)((1 << gl_dither_bpc) - 1);
 
 	if (screenshot)

@@ -11,47 +11,15 @@
 ** Copyright 1999-2016 Marisa Heit
 ** Copyright 2002-2017 Christoph Oelckers
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** This program is free software: you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation, either version 3 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
 **---------------------------------------------------------------------------
 **
 ** For code that originates from ZDoom the following applies:
 **
-** Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions
-** are met:
-**
-** 1. Redistributions of source code must retain the above copyright
-**    notice, this list of conditions and the following disclaimer.
-** 2. Redistributions in binary form must reproduce the above copyright
-**    notice, this list of conditions and the following disclaimer in the
-**    documentation and/or other materials provided with the distribution.
-** 3. The name of the author may not be used to endorse or promote products
-**    derived from this software without specific prior written permission.
-**
-** THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-** IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-** OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-** IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-** INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-** NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+** SPDX-License-Identifier: BSD-3-Clause
 **
 **---------------------------------------------------------------------------
 **
@@ -4360,7 +4328,7 @@ void AActor::GetBoneMatrix(int model_index, int bone_index, bool with_override, 
 	}
 }
 
-DVector3 AActor::GetBoneEulerAngles(int model_index, int bone_index, bool with_override)
+DVector3 AActor::GetBoneEulerAngles(FModel * mdl, int model_index, int bone_index, bool with_override)
 {
 	if(modelData && (modelData->flags & MODELDATA_GET_BONE_INFO) && model_index >= 0 && bone_index >= 0 && modelData->modelBoneInfo.SSize() > model_index && modelData->modelBoneInfo[model_index].positions.SSize() > bone_index)
 	{
@@ -4370,7 +4338,10 @@ DVector3 AActor::GetBoneEulerAngles(int model_index, int bone_index, bool with_o
 
 		FVector3 objPos = FVector3(Pos() + WorldOffset);
 
-		VSMatrix boneMatrix = (with_override ? modelData->modelBoneInfo[model_index].positions_with_override : modelData->modelBoneInfo[model_index].positions)[bone_index];
+		VSMatrix boneRotMatrix = (with_override ? modelData->modelBoneInfo[model_index].positions_with_override : modelData->modelBoneInfo[model_index].positions)[bone_index];
+
+		FQuaternion baseRot = mdl->GetJointRotation(bone_index);
+		boneRotMatrix.multQuaternion(baseRot);
 		VSMatrix worldMatrix = smf->ObjectToWorldMatrix(this, objPos.X, objPos.Y, objPos.Z, 1.0);
 
 		FVector4 oldFwd(1.0, 0.0, 0.0, 0.0);
@@ -4378,8 +4349,8 @@ DVector3 AActor::GetBoneEulerAngles(int model_index, int bone_index, bool with_o
 		FVector4 oldUp(0.0, 1.0, 0.0, 0.0);
 		FVector4 newUp;
 
-		boneMatrix.multMatrixPoint(&oldFwd.X, &newFwd.X);
-		boneMatrix.multMatrixPoint(&oldUp.X, &newUp.X);
+		boneRotMatrix.multMatrixPoint(&oldFwd.X, &newFwd.X);
+		boneRotMatrix.multMatrixPoint(&oldUp.X, &newUp.X);
 
 		oldFwd = FVector4(FVector3(newFwd.X, newFwd.Y, newFwd.Z).Unit(), 0.0);
 		oldUp = FVector4(FVector3(newUp.X, newUp.Y, newUp.Z).Unit(), 0.0);
@@ -4440,7 +4411,7 @@ DVector3 AActor::GetBoneEulerAngles(int model_index, int bone_index, bool with_o
 	return DVector3(0,0,0);
 }
 
-void AActor::GetBonePosition(int model_index, int bone_index, bool with_override, DVector3 &pos, DVector3 &fwd, DVector3 &up)
+void AActor::GetBonePosition(FModel * mdl, int model_index, int bone_index, bool with_override, DVector3 &pos, DVector3 &fwd, DVector3 &up)
 {
 	if(modelData && (modelData->flags & MODELDATA_GET_BONE_INFO) && model_index >= 0 && bone_index >= 0 && modelData->modelBoneInfo.SSize() > model_index && modelData->modelBoneInfo[model_index].positions.SSize() > bone_index)
 	{
@@ -4451,6 +4422,11 @@ void AActor::GetBonePosition(int model_index, int bone_index, bool with_override
 		FVector3 objPos = FVector3(Pos() + WorldOffset);
 
 		VSMatrix boneMatrix = (with_override ? modelData->modelBoneInfo[model_index].positions_with_override : modelData->modelBoneInfo[model_index].positions)[bone_index];
+		VSMatrix boneRotMatrix = boneMatrix;
+
+		FQuaternion baseRot = mdl->GetJointRotation(bone_index);
+		boneRotMatrix.multQuaternion(baseRot);
+
 		VSMatrix worldMatrix = smf->ObjectToWorldMatrix(this, objPos.X, objPos.Y, objPos.Z, 1.0);
 
 		FVector4 oldPos(pos.X, pos.Z, pos.Y, 1.0);
@@ -4461,8 +4437,8 @@ void AActor::GetBonePosition(int model_index, int bone_index, bool with_override
 		FVector4 newUp;
 
 		boneMatrix.multMatrixPoint(&oldPos.X, &newPos.X);
-		boneMatrix.multMatrixPoint(&oldFwd.X, &newFwd.X);
-		boneMatrix.multMatrixPoint(&oldUp.X, &newUp.X);
+		boneRotMatrix.multMatrixPoint(&oldFwd.X, &newFwd.X);
+		boneRotMatrix.multMatrixPoint(&oldUp.X, &newUp.X);
 
 		oldPos = FVector4(FVector3(newPos.X, newPos.Y, newPos.Z) / newPos.W, 1.0);
 		oldFwd = FVector4(FVector3(newFwd.X, newFwd.Y, newFwd.Z).Unit(), 0.0);

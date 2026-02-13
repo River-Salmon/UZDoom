@@ -10,20 +10,9 @@
 ** Copyright 1999-2016 Marisa Heit
 ** Copyright 2002-2016 Christoph Oelckers
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** This program is free software: you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation, either version 3 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program.  If not, see <https://www.gnu.org/licenses/>.
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
 **---------------------------------------------------------------------------
 **
@@ -38,6 +27,7 @@
 
 #include "a_sharedglobal.h"
 #include "actorinlines.h"
+#include "c_dispatch.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "d_player.h"
@@ -355,6 +345,23 @@ CUSTOM_CVAR(Int, r_extralight, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 		self = -64;
 	else if (self > 128)
 		self = 128;
+}
+
+CCMD (bumplight)
+{
+	int step = 16;
+	int min = -64 / step;
+	int max = 128 / step;
+
+	int g = r_extralight/step + 1;
+
+	if (g > max) g = min;
+
+	g *= step;
+
+	r_extralight = g;
+
+	Printf ("Lighting adjustment %d\n", g);
 }
 
 //==========================================================================

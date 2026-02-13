@@ -8,34 +8,15 @@
 ** Copyright 2002-2016 Christoph Oelckers
 ** Copyright 2004-2016 Marisa Heit
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions
-** are met:
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
-** 1. Redistributions of source code must retain the above copyright
-**    notice, this list of conditions and the following disclaimer.
-** 2. Redistributions in binary form must reproduce the above copyright
-**    notice, this list of conditions and the following disclaimer in the
-**    documentation and/or other materials provided with the distribution.
-** 3. The name of the author may not be used to endorse or promote products
-**    derived from this software without specific prior written permission.
-** 4. When not used as part of ZDoom or a ZDoom derivative, this code will be
-**    covered by the terms of the GNU General Public License as published by
-**    the Free Software Foundation; either version 2 of the License, or (at
-**    your option) any later version.
+**---------------------------------------------------------------------------
 **
-** THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-** IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-** OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-** IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-** INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-** NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+** Code written prior to 2026 is also licensed under:
+**
+** SPDX-License-Identifier: LicenseRef-ZDoom-Conditional
 **
 **---------------------------------------------------------------------------
 **
@@ -6049,7 +6030,7 @@ DEFINE_ACTION_FUNCTION(AActor, GetBoneEulerAngles)
 
 	if(mdl)
 	{
-		ACTION_RETURN_VEC3(self->GetBoneEulerAngles(0, bone_index, with_override));
+		ACTION_RETURN_VEC3(self->GetBoneEulerAngles(mdl, 0, bone_index, with_override));
 	}
 
 
@@ -6068,7 +6049,7 @@ DEFINE_ACTION_FUNCTION(AActor, GetNamedBoneEulerAngles)
 
 	if(mdl)
 	{
-		ACTION_RETURN_VEC3(self->GetBoneEulerAngles(0, bone_index, with_override));
+		ACTION_RETURN_VEC3(self->GetBoneEulerAngles(mdl, 0, bone_index, with_override));
 	}
 
 	ACTION_RETURN_VEC3(DVector3(0,0,0));
@@ -6099,7 +6080,7 @@ DEFINE_ACTION_FUNCTION(AActor, TransformByBone)
 
 	if(mdl)
 	{
-		self->GetBonePosition(0, bone_index, with_override, position, fwd, up);
+		self->GetBonePosition(mdl, 0, bone_index, with_override, position, fwd, up);
 	}
 
 	if(numret > 2)
@@ -6145,7 +6126,7 @@ DEFINE_ACTION_FUNCTION(AActor, TransformByNamedBone)
 
 	if(mdl)
 	{
-		self->GetBonePosition(0, bone_index, with_override, position, fwd, up);
+		self->GetBonePosition(mdl, 0, bone_index, with_override, position, fwd, up);
 	}
 
 	if(numret > 2)
@@ -6354,7 +6335,7 @@ public:
 DEFINE_FIELD(DAnimationLayer, curAnim);
 DEFINE_FIELD(DAnimationLayer, prevAnim);
 
-IMPLEMENT_CLASS(DAnimationLayer, false, false);
+IMPLEMENT_CLASS(DAnimationLayer, false, true);
 IMPLEMENT_POINTERS_START(DAnimationLayer)
 	IMPLEMENT_POINTER(curAnim)
 	IMPLEMENT_POINTER(prevAnim)
@@ -7408,8 +7389,11 @@ DEFINE_ACTION_FUNCTION(AActor, SetBones)
 	PARAM_INT(mode);
 	PARAM_FLOAT(interplen);
 
-
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
@@ -7432,8 +7416,11 @@ DEFINE_ACTION_FUNCTION(AActor, SetBonesUI)
 	PARAM_INT(mode);
 	PARAM_FLOAT(interplen);
 
-
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
@@ -7457,6 +7444,10 @@ DEFINE_ACTION_FUNCTION(AActor, OverwriteBones)
 
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
 
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
+
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
 	int n = std::min(bones->frameData.SSize(), overrides.SSize());
@@ -7478,8 +7469,11 @@ DEFINE_ACTION_FUNCTION(AActor, SetBonesRange)
 	PARAM_INT(mode);
 	PARAM_FLOAT(interplen);
 
-
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
@@ -7504,8 +7498,11 @@ DEFINE_ACTION_FUNCTION(AActor, SetBonesRangeUI)
 	PARAM_INT(mode);
 	PARAM_FLOAT(interplen);
 
-
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
@@ -7531,6 +7528,10 @@ DEFINE_ACTION_FUNCTION(AActor, OverwriteBonesRange)
 
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
 
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
+
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
 	int n = std::min(bones->frameData.SSize(), std::min(overrides.SSize(), start + length));
@@ -7551,8 +7552,11 @@ DEFINE_ACTION_FUNCTION(AActor, SetBonesMask)
 	PARAM_INT(mode);
 	PARAM_FLOAT(interplen);
 
-
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
@@ -7576,8 +7580,11 @@ DEFINE_ACTION_FUNCTION(AActor, SetBonesMaskUI)
 	PARAM_INT(mode);
 	PARAM_FLOAT(interplen);
 
-
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 
@@ -7601,6 +7608,10 @@ DEFINE_ACTION_FUNCTION(AActor, OverwriteBonesMask)
 	PARAM_INT(mode);
 
 	FModel * mdl = SetGetBoneShared<true, true>(self, 0);
+
+	if(self->modelData->modelBoneOverrides.SSize() <= 0) self->modelData->modelBoneOverrides.Resize(1);
+
+	self->modelData->modelBoneOverrides[0].Resize(mdl->NumJoints());
 
 	TArray<BoneOverride> &overrides = self->modelData->modelBoneOverrides[0];
 

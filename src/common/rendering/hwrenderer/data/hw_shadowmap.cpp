@@ -7,20 +7,9 @@
 **
 ** Copyright 2017 Magnus Norddahl
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, see <https://www.gnu.org/licenses/>.
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
 **---------------------------------------------------------------------------
 **
@@ -74,14 +63,17 @@ ADD_STAT(shadowmap)
 	return out;
 }
 
-CUSTOM_CVAR(Int, gl_shadowmap_quality, 512, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+CUSTOM_CVAR(Int, gl_shadowmap_quality, 1024, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 {
 	switch (self)
 	{
-	case 128:
-	case 256:
-	case 512:
-	case 1024:
+	case 2<<6: // 128
+	case 2<<7: // 256
+	case 2<<8: // 512
+	case 2<<9: // 1024
+	case 2<<10: // 2048
+	case 2<<11: // 4096
+	case 2<<12: // 8192
 		break;
 	default:
 		self = 128;

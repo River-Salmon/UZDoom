@@ -8,30 +8,15 @@
 ** Copyright 1998-2016 Marisa Heit
 ** Copyright 2007-2016 Christoph Oelckers
 ** Copyright 2017-2025 GZDoom Maintainers and Contributors
-** Copyright 2025 UZDoom Maintainers and Contributors
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
-** Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions
-** are met:
+** SPDX-License-Identifier: GPL-3.0-or-later
 **
-** 1. Redistributions of source code must retain the above copyright
-**    notice, this list of conditions and the following disclaimer.
-** 2. Redistributions in binary form must reproduce the above copyright
-**    notice, this list of conditions and the following disclaimer in the
-**    documentation and/or other materials provided with the distribution.
-** 3. The name of the author may not be used to endorse or promote products
-**    derived from this software without specific prior written permission.
+**---------------------------------------------------------------------------
 **
-** THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-** IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-** OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-** IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-** INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-** NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OFf
-** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+** Code written prior to 2026 is also licensed under:
+**
+** SPDX-License-Identifier: BSD-3-Clause
 **
 **---------------------------------------------------------------------------
 **
@@ -77,27 +62,33 @@ EXTERN_CVAR (Int, gl_texture_hqresizemult)
 EXTERN_CVAR (Int, vid_preferbackend)
 EXTERN_CVAR (Float, vid_scale_custompixelaspect)
 EXTERN_CVAR (Bool, vid_scale_linear)
-EXTERN_CVAR(Float, m_sensitivity_x)
-EXTERN_CVAR(Float, m_sensitivity_y)
-EXTERN_CVAR(Int, adl_volume_model)
-EXTERN_CVAR(Int, adl_chan_alloc)
-EXTERN_CVAR(Bool, adl_auto_arpeggio)
-EXTERN_CVAR(Int, opn_volume_model)
-EXTERN_CVAR(Int, opn_chan_alloc)
-EXTERN_CVAR(Bool, opn_auto_arpeggio)
+EXTERN_CVAR (Float, m_sensitivity_x)
+EXTERN_CVAR (Float, m_sensitivity_y)
+EXTERN_CVAR (Int, adl_volume_model)
+EXTERN_CVAR (Int, adl_chan_alloc)
+EXTERN_CVAR (Bool, adl_auto_arpeggio)
+EXTERN_CVAR (Int, opn_volume_model)
+EXTERN_CVAR (Int, opn_chan_alloc)
+EXTERN_CVAR (Bool, opn_auto_arpeggio)
 EXTERN_CVAR (Int, gl_texture_hqresize_targets)
-EXTERN_CVAR(Int, wipetype)
-EXTERN_CVAR(Bool, i_pauseinbackground)
-EXTERN_CVAR(Bool, i_soundinbackground)
-EXTERN_CVAR(Bool, i_is_new_release)
+EXTERN_CVAR (Int, wipetype)
+EXTERN_CVAR (Bool, i_pauseinbackground)
+EXTERN_CVAR (Bool, i_soundinbackground)
+EXTERN_CVAR (Bool, i_is_new_release)
 
 FARG(config, "Configuration", "Specifies an alternative configuration file to use.", "configfile",
 	"Causes " GAMENAME " to use an alternative configuration file. If configfile does not exist,"
 	" it will be created.");
 
 #ifdef _WIN32
-EXTERN_CVAR(Int, in_mouse)
+EXTERN_CVAR (Int, in_mouse)
 #endif
+
+enum ResetBinds
+{
+	V226GamePad = 1 << 0,
+	V230Gamma = 1 << 1,
+};
 
 static TArray<FString> DefaultSearchPaths;
 
@@ -172,11 +163,11 @@ static void CollectDefaultSearchPaths()
 
 FGameConfigFile::FGameConfigFile ()
 {
-
 	FString pathname;
 
 	OkayToWrite = false;	// Do not allow saving of the config before DoKeySetup()
 	bModSetup = false;
+	bResetBindFlags = 0;
 	pathname = GetConfigPath (true);
 	ChangePathName (pathname.GetChars());
 	LoadConfigFile ();
@@ -710,12 +701,13 @@ void FGameConfigFile::DoGlobalSetup ()
 				// We can't handle key config yet, because
 				// the files aren't fully loaded. Just queue
 				// up a flag to do this later.
-				b226ResetGamepad = true;
+				bResetBindFlags |= V226GamePad;
 			}
-			if (last < 229) // UZDoom 5.0
+			if (last < 230) // UZDoom 5.0
 			{
 				// Reset brightness related settings, as the values all mean something different now
 				AddCommandString("vid_reset2defaults");
+				bResetBindFlags |= V230Gamma;
 			}
 		}
 	}
@@ -823,9 +815,9 @@ void FGameConfigFile::DoKeySetup(const char *gamename)
 		}
 	}
 
-	if (b226ResetGamepad == true)
+	if (bResetBindFlags & V226GamePad)
 	{
-		b226ResetGamepad = false;
+		bResetBindFlags -= V226GamePad;
 
 		// Multiple gamepad reworks were done during
 		// this version. There is not any particularly
@@ -849,6 +841,15 @@ void FGameConfigFile::DoKeySetup(const char *gamename)
 		}
 
 		C_SetDefaultBindings(&keys_to_reset);
+	}
+
+	if (bResetBindFlags & V230Gamma)
+	{
+		bResetBindFlags -= V230Gamma;
+
+		// swap binds
+		Bindings.UnbindACommand("bumpgamma");
+		Bindings.DefaultBind("F11", "bumplight");
 	}
 
 	OkayToWrite = true;
