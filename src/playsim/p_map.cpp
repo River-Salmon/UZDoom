@@ -65,6 +65,7 @@
 CVAR(Bool, cl_bloodsplats, true, CVAR_ARCHIVE)
 CVAR(Int, sv_smartaim, 0, CVAR_ARCHIVE | CVAR_SERVERINFO)
 CVAR(Bool, cl_doautoaim, false, CVAR_ARCHIVE)
+CVAR(Bool, sv_autocompat, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_SERVERINFO)
 
 static void CheckForPushSpecial(line_t *line, int side, AActor *mobj, DVector2 * posforwindowcheck = NULL);
 static void SpawnShootDecal(AActor *t1, AActor *defaults, const FTraceResults &trace);
@@ -1583,7 +1584,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 		{
 			clipheight = thing->projectilepassheight;
 		}
-		else if (thing->projectilepassheight < 0 && (thing->Level->i_compatflags & COMPATF_MISSILECLIP))
+		else if (thing->projectilepassheight < 0 && thing->Level->MissileShouldClip())
 		{
 			clipheight = -thing->projectilepassheight;
 		}
@@ -1693,7 +1694,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 				IFVIRTUALPTR(tm.thing, AActor, PlayerPushedSomethingMakeRumble)
 				{
 					VMValue params[1] = { thing };
-					VMCall(func, params, 1, nullptr, 0);
+					VMCall(func, params, 2, nullptr, 0);
 				}
 			}
 			else if (thing == players[consoleplayer].mo || thing == players[consoleplayer].camera)
@@ -2170,7 +2171,7 @@ int P_TestMobjZ(AActor *actor, bool quick, AActor **pOnmobj)
 			{
 				clipheight = thing->projectilepassheight;
 			}
-			else if (thing->projectilepassheight < 0 && (thing->Level->i_compatflags & COMPATF_MISSILECLIP))
+			else if (thing->projectilepassheight < 0 && thing->Level->MissileShouldClip())
 			{
 				clipheight = -thing->projectilepassheight;
 			}
@@ -4545,7 +4546,8 @@ DAngle P_AimLineAttack(AActor *t1, DAngle angle, double distance, FTranslatedLin
 				// vrange of 0 degrees, because then toppitch and bottompitch will
 				// be equal, and PTR_AimTraverse will never find anything to shoot at
 				// if it crosses a line.
-				vrange = DAngle::fromDeg(clamp(t1->player->userinfo.GetAimDist(), 0.5, 35.));
+				double bound = (dmflags & DF_NO_FREELOOK)? 35: 70;
+				vrange = DAngle::fromDeg(clamp(t1->player->userinfo.GetAimDist(), 0.5, bound));
 			}
 		}
 	}

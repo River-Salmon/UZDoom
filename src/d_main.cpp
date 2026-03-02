@@ -48,7 +48,7 @@
 #include "c_dispatch.h"
 #include "cmdlib.h"
 #include "common/scripting/dap/DebugServer.h"
-#include "common/widgets/errorwindow.h"
+#include "widgets/errorwindow.h"
 #include "d_buttons.h"
 #include "d_dehacked.h"
 #include "d_event.h"
@@ -196,7 +196,7 @@ FARG(file, "Loading", "Loads one or more custom PWAD files.", "file1[.wad] file2
 	" file3.wad will work just as well as " GAMENAMELOWERCASE " -file file1.wad file2.wad"
 	" file3.wad.");
 FARG_ADVANCED(optfile, "Loading", "file1[.wad] file2[.wad] ...",
-	"Same as -file, but it will ignore missing files");
+	"Same as -file, but it will ignore missing files and not check them over the net for multiplayer games");
 FARG(noautoload, "Loading", "Prevents loading files automatically from config.", "",
 	"Prevents files from being autoloaded based on the \"AutoLoad\" sections in the user's"
 	" configuration file. This flag also disables autoloading of zvox.wad and the skins directory."
@@ -2168,7 +2168,8 @@ static FString CheckGameInfo(std::vector<std::string> & pwads)
 	GetReserved(lfi);
 
 	// Open the entire list as a temporary file system and look for a GAMEINFO lump. The last one will automatically win.
-	if (check.InitMultipleFiles(pwads, &lfi, nullptr))
+	std::vector<std::string> empty;
+	if (check.InitMultipleFiles(pwads, empty, &lfi, nullptr))
 	{
 		int num = check.CheckNumForName("GAMEINFO");
 		if (num >= 0)
@@ -2239,19 +2240,19 @@ static void AddAutoloadFiles(const char *autoname, std::vector<std::string>& all
 		{
 			const char *lightswad = BaseFileSearch ("lights.pk3", NULL, true, GameConfig);
 			if (lightswad)
-				D_AddFile (allwads, lightswad, true, -1, GameConfig, true);
+				D_AddFile (allwads, lightswad, true, -1, GameConfig);
 		}
 		if ((GameStartupInfo.LoadBrightmaps == 1 || (GameStartupInfo.LoadBrightmaps != 0 && autoloadbrightmaps)) && !(Args->CheckParm(FArg_nobrightmaps)))
 		{
 			const char *bmwad = BaseFileSearch ("brightmaps.pk3", NULL, true, GameConfig);
 			if (bmwad)
-				D_AddFile (allwads, bmwad, true, -1, GameConfig, true);
+				D_AddFile (allwads, bmwad, true, -1, GameConfig);
 		}
 		if ((GameStartupInfo.LoadWidescreen == 1 || (GameStartupInfo.LoadWidescreen != 0 && autoloadwidescreen)) && !(Args->CheckParm(FArg_nowidescreen)))
 		{
 			const char *wswad = BaseFileSearch ("game_widescreen_gfx.pk3", NULL, true, GameConfig);
 			if (wswad)
-				D_AddFile (allwads, wswad, true, -1, GameConfig, true);
+				D_AddFile (allwads, wswad, true, -1, GameConfig);
 		}
 	}
 
@@ -2267,7 +2268,7 @@ static void AddAutoloadFiles(const char *autoname, std::vector<std::string>& all
 		// it for something else, so this gets to stay here.
 		const char *wad = BaseFileSearch ("zvox.wad", NULL, false, GameConfig);
 		if (wad)
-			D_AddFile (allwads, wad, true, -1, GameConfig, true);
+			D_AddFile (allwads, wad, true, -1, GameConfig);
 
 		// [RH] Add any .wad files in the skins directory
 #ifdef __unix__
@@ -2276,7 +2277,7 @@ static void AddAutoloadFiles(const char *autoname, std::vector<std::string>& all
 		file = progdir;
 #endif
 		file += "skins";
-		D_AddDirectory (allwads, file.GetChars(), "*.wad", GameConfig, true);
+		D_AddDirectory (allwads, file.GetChars(), "*.wad", GameConfig);
 
 #ifdef __unix__
 		FString skinDir = FStringf("%s/games/" GAMENAMELOWERCASE "/skins", GetDataPath());
@@ -2406,7 +2407,7 @@ static void CheckCmdLine()
 
 	if (devparm)
 	{
-		Printf ("%s", GStrings.GetString("D_DEVSTR"));
+		Printf ("%s\n", GStrings.GetString("D_DEVSTR"));
 	}
 
 	// turbo option  // [RH] (now a cvar)
@@ -3271,6 +3272,8 @@ static void Doom_CastSpriteIDToString(FString* a, unsigned int b)
 
 extern DThinker* NextToThink;
 
+void P_MarkRollbackObjects();
+
 static void GC_MarkGameRoots()
 {
 	GC::Mark(staticEventManager.FirstEventHandler);
@@ -3287,6 +3290,7 @@ static void GC_MarkGameRoots()
 
 	// NextToThink must not be freed while thinkers are ticking.
 	GC::Mark(NextToThink);
+	P_MarkRollbackObjects();
 }
 
 static void System_ToggleFullConsole()
@@ -3374,7 +3378,7 @@ static int FileSystemPrintf(FSMessageLevel level, const char* fmt, ...)
 //
 //==========================================================================
 
-static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allwads, std::vector<std::string>& pwads)
+static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allwads, std::vector<std::string>& optwads, std::vector<std::string>& pwads)
 {
 	NetworkEntityManager::InitializeNetworkEntities();
 
@@ -3418,7 +3422,7 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	FBaseCVar::DisableCallbacks();
 	GameConfig->DoGameSetup (gameinfo.ConfigName.GetChars());
 
-	AddAutoloadFiles(iwad_info->Autoname.GetChars(), allwads);
+	AddAutoloadFiles(iwad_info->Autoname.GetChars(), optwads);
 
 	// Process automatically executed files
 	FExecList *exec;
@@ -3483,12 +3487,14 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	);
 
 	bool allowduplicates = Args->CheckParm(FArg_allowduplicates);
-	if (!fileSystem.InitMultipleFiles(allwads, &lfi, FileSystemPrintf, allowduplicates))
+	if (!fileSystem.InitMultipleFiles(allwads, optwads, &lfi, FileSystemPrintf, allowduplicates))
 	{
 		I_FatalError("FileSystem: no files found");
 	}
 	allwads.clear();
 	allwads.shrink_to_fit();
+	optwads.clear();
+	optwads.shrink_to_fit();
 	SetMapxxFlag();
 
 	D_GrabCVarDefaults(); //parse DEFCVARS
@@ -3526,9 +3532,6 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		exec = NULL;
 	}
 
-	if (!(restart || norun))
-		V_Init2();
-
 	// [RH] Initialize localizable strings.
 	GStrings.LoadStrings(fileSystem, language);
 
@@ -3550,23 +3553,8 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 
 	TexMan.Init();
 
-	if (!(batchrun || norun)) Printf ("V_Init: allocate screen.\n");
-	if (!(restart || norun))
-	{
-		screen->CompileNextShader();
-	}
-	else if(!norun)
-	{
-		// Update screen palette when restarting
-		screen->UpdatePalette();
-	}
-
 	// Base systems have been inited; enable cvar callbacks
 	FBaseCVar::EnableCallbacks ();
-
-	StartScreen = nostartscreen? nullptr : GetGameStartScreen(per_shader_progress > 0 ? max_progress * 10 / 9 : max_progress + 3);
-	setmodeneeded = true;
-	if (StartScreen != nullptr) StartScreen->Render();
 
 	// +compatmode cannot be used on the command line, so use this as a substitute
 	auto compatmodeval = Args->CheckValue(FArg_compatmode);
@@ -3764,6 +3752,45 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	// [RH] Lock any cvars that should be locked now that we're
 	// about to begin the game.
 	FBaseCVar::EnableNoSet ();
+
+	// [Sal] FIXME: The window used to be created much earlier.
+	// 
+	// This makes more sense for the loading screen, but makes no sense
+	// for the netgame lobby. The lobby creates its own window, and takes
+	// up the main thread. This causes issues that range from annoying
+	// (like a black, uninteractable box in the background when playing
+	// a netgame), to destructive (like the GL context being clobbered
+	// on Linux and causing the game to crash).
+	//
+	// The solution for now is to simply create the window extremely late.
+	// This undoes most of the loading screen code, but improves stability
+	// in every other aspect.
+	// 
+	// Since all of the loading screen code constantly checks for null,
+	// I've left it as is so it can be reused as a reference when it
+	// gets overhauled. There's some potential ways we could re-introduce
+	// the loading screen, but they all will be easier if we move away
+	// from ZWidgets first. (Either introducing a separate loading bar
+	// window, or see if we aren't using initializing OpenGL for the
+	// replacement widget framework, or clean up the code to handle
+	// swapping between multiple GL contexts)
+	if (!(restart || norun))
+		V_Init2();
+
+	if (!(batchrun || norun)) Printf ("V_Init: allocate screen.\n");
+	if (!(restart || norun))
+	{
+		screen->CompileNextShader();
+	}
+	else if(!norun)
+	{
+		// Update screen palette when restarting
+		screen->UpdatePalette();
+	}
+
+	StartScreen = nostartscreen? nullptr : GetGameStartScreen(per_shader_progress > 0 ? max_progress * 10 / 9 : max_progress + 3);
+	setmodeneeded = true;
+	if (StartScreen != nullptr) StartScreen->Render();
 
 	if (norun || batchrun)
 	{
@@ -4064,10 +4091,12 @@ static int D_DoomMain_Internal (void)
 		if (iwad.IsEmpty()) iwad = lastIWAD;
 
 		std::vector<std::string> allwads;
+		std::vector<std::string> optwads;
 
-		const FIWADInfo *iwad_info = iwad_man->FindIWAD(allwads, iwad.GetChars(), basewad.GetChars(), optionalwad.GetChars());
+		const FIWADInfo *iwad_info = iwad_man->FindIWAD(allwads, optwads, iwad.GetChars(), basewad.GetChars(), optionalwad.GetChars());
 
 		GetCmdLineFiles(pwads, false); // [RL0] Update with files passed on the launcher extra args
+		// For now these need to remain verifiable over the network.
 		GetCmdLineFiles(pwads, true);
 
 		if (!iwad_info) return 0;	// user exited the selection popup via cancel button.
@@ -4113,11 +4142,13 @@ static int D_DoomMain_Internal (void)
 				GameStartupInfo.SteamAppId = "";
 		}
 
-		int ret = D_InitGame(iwad_info, allwads, pwads);
+		int ret = D_InitGame(iwad_info, allwads, optwads, pwads);
 		pwads.clear();
 		pwads.shrink_to_fit();
 		allwads.clear();
 		allwads.shrink_to_fit();
+		optwads.clear();
+		optwads.shrink_to_fit();
 		delete iwad_man;	// now we won't need this anymore
 		iwad_man = NULL;
 		if (ret != 0) return ret;

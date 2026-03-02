@@ -24,14 +24,20 @@
 
 #pragma once
 
+// IWYU pragma: begin_exports
+
 #include <algorithm>
-#include <stddef.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 #include <type_traits>
 
 #if defined(_M_X64) || defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64)
 #include <xmmintrin.h>
 #endif
+
+// IWYU pragma: end_exports
 
 #define MAXWIDTH 12000
 #define MAXHEIGHT 5000
@@ -93,11 +99,10 @@ using BITFIELD = uint32_t;
 #undef M_PI
 #endif
 
-const double M_PI = 3.14159265358979323846;	// matches value in gcc v2 math.h
+constexpr double M_PI = 3.14159265358979323846;	// matches value in gcc v2 math.h
 
 using std::min;
 using std::max;
-//using std::clamp;
 
 template<typename T>
 T clamp(T val, T minval, T maxval)

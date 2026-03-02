@@ -48,6 +48,8 @@
 #include "p_visualthinker.h"
 #include <memory>
 
+EXTERN_CVAR(Bool, sv_autocompat)
+
 struct FGlobalDLightLists
 {
 	//TODO add TSet and switch from TMap to TSet
@@ -450,8 +452,6 @@ public:
 
 	DThinker *CreateThinker(PClass *cls, int statnum = STAT_DEFAULT)
 	{
-		if (bPredictionGuard)
-			DPrintf(DMSG_WARNING, TEXTCOLOR_RED "Spawned non-client-side Thinker %s while predicting\n", cls->TypeName.GetChars());
 		DThinker *thinker = static_cast<DThinker*>(cls->CreateNew());
 		assert(thinker->IsKindOf(RUNTIME_CLASS(DThinker)));
 		thinker->ObjectFlags |= OF_JustSpawned;
@@ -472,7 +472,7 @@ public:
 	{
 		DThinker* thinker = static_cast<DThinker*>(cls->CreateNew());
 		assert(thinker->IsKindOf(RUNTIME_CLASS(DThinker)));
-		thinker->ObjectFlags |= OF_JustSpawned | OF_ClientSide | OF_Transient;
+		thinker->ObjectFlags |= OF_JustSpawned | OF_ClientSide | OF_Transient | OF_NoRollback;
 		ClientSideThinkers.Link(thinker, statnum);
 		thinker->Level = this;
 		return thinker;
@@ -865,6 +865,12 @@ public:
 		if (dmflags & DF_YES_FREELOOK)
 			return true;
 		return !(flags & LEVEL_FREELOOK_NO);
+	}
+
+	bool MissileShouldClip() const
+	{
+		return (i_compatflags & COMPATF_MISSILECLIP) ||
+			(sv_autocompat && (gameinfo.gametype & GAME_DoomChex) && maptype == MAPTYPE_DOOM);
 	}
 
 	node_t		*HeadNode() const

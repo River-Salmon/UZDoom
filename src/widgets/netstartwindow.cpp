@@ -20,6 +20,8 @@
 #include <zwidget/widgets/pushbutton/pushbutton.h>
 #include <zwidget/widgets/textlabel/textlabel.h>
 
+#include "basics.h"
+#include "gstrings.h"
 #include "netstartwindow.h"
 #include "version.h"
 
@@ -104,7 +106,7 @@ void NetStartWindow::NetProgress(int cur, int limit)
 
 	Instance->maxpos = limit;
 	Instance->SetProgress(cur);
-	for (size_t start = Instance->LobbyWindow->GetItemAmount(); start < Instance->maxpos; ++start)
+	for (int start = Instance->LobbyWindow->GetItemAmount(); start < Instance->maxpos; ++start)
 		Instance->LobbyWindow->AddItem(std::to_string(start));
 }
 
@@ -181,7 +183,7 @@ NetStartWindow::NetStartWindow(bool host) : Widget(nullptr, WidgetType::Window)
 	ProgressLabel->SetTextAlignment(TextLabelAlignment::Center);
 
 	AbortButton->OnClick = [=]() { OnClose(); };
-	AbortButton->SetText("Abort");
+	AbortButton->SetText(GStrings.GetString("ACTION_ABORT"));
 
 	if (host)
 	{
@@ -189,15 +191,15 @@ NetStartWindow::NetStartWindow(bool host) : Widget(nullptr, WidgetType::Window)
 
 		ForceStartButton = new PushButton(this);
 		ForceStartButton->OnClick = [=]() { ForceStart(); };
-		ForceStartButton->SetText("Start Game");
+		ForceStartButton->SetText(GStrings.GetString("ACTION_STARTGAME"));
 
 		KickButton = new PushButton(this);
 		KickButton->OnClick = [=]() { OnKick(); };
-		KickButton->SetText("Kick");
+		KickButton->SetText(GStrings.GetString("ACTION_KICK"));
 
 		BanButton = new PushButton(this);
 		BanButton->OnClick = [=]() { OnBan(); };
-		BanButton->SetText("Ban");
+		BanButton->SetText(GStrings.GetString("ACTION_BAN"));
 	}
 
 	// Client number, flags, name, status.
