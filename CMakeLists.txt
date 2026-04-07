@@ -31,6 +31,21 @@ endif()
 
 project(UZDoom)
 
+# make all targets use LTO - want to do this early in the cmake to ensure it applies to any targets
+option( FORCE_NO_LTO "Turn off LTO even if it would be possible to use it." NO )
+
+if(NOT FORCE_NO_LTO)
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+	if( ipo_supported )
+		message(STATUS "Using LTO on Release and RelWithDebInfo build types")
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE)
+	else()
+		message(STATUS "Not using LTO because unsupported: ${ipo_error}")
+	endif()
+endif()
+
 if (WIN32 AND VCPKG_TOOLCHAIN)
 	option(LIBVPX_VCPKG "Use libvpx from vcpkg" OFF)
 endif()
@@ -137,21 +152,11 @@ function( add_pk3 PK3_NAME )
 	assort_pk3_source_folder("Source Files" ${ARGN})
 
 	# Phase 4: Create separate copy step, in order to make zdoom depend on pk3s without creating cycle
-	if(DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-		set(DEST_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-	elseif(WIN32)
-		set(DEST_DIR "${PROJECT_BINARY_DIR}/$<CONFIG>")
-	elseif(APPLE)
-		set(DEST_DIR "${PROJECT_BINARY_DIR}/${ZDOOM_EXE_NAME}.app/Contents/Resources")
-	else()
-		set(DEST_DIR "${PROJECT_BINARY_DIR}")
-	endif()
-
 	set(COPY_TARGET_NAME "${PK3_TARGET}_copy")
 	add_custom_target(${COPY_TARGET_NAME} ALL
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 			"${ZDOOM_OUTPUT_DIR}/${PK3_NAME}"
-			"${DEST_DIR}/${PK3_NAME}"
+			"${ZDOOM_RESOURCE_DIR}/${PK3_NAME}"
 		DEPENDS ${PK3_TARGET}
 	)
 	add_dependencies(zdoom ${COPY_TARGET_NAME})
@@ -167,22 +172,16 @@ function( add_pk3 PK3_NAME )
 		COMPONENT "Game resources")
 endfunction()
 
-macro( generate_language_files target destination )
+macro( generate_language_files target destination identifier )
 	# right now, this dumps temp files into the source tree and deletes them after build
 	# This should be re-worked to dump stuff into the build tree instead
 	set(lang_script "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/Translation/scripts/compile.py")
 	set(lang_dst "${CMAKE_CURRENT_SOURCE_DIR}/${destination}")
 	set(lang_target "${target}_${destination}")
 
-	set(lang_sources_list "")
-	set(sources ${ARGN})
-	foreach( source_item ${sources} )
-		list(APPEND lang_sources_list "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/Translation/${source_item}")
-	endforeach()
-
 	string( REGEX REPLACE "[^a-zA-Z0-9]" "_" lang_target ${lang_target} )
 
-	add_custom_target(${lang_target} COMMAND Python3::Interpreter -B -E -s "${lang_script}" ${lang_sources_list} "${lang_dst}")
+	add_custom_target(${lang_target} COMMAND Python3::Interpreter -B -E -s "${lang_script}" --recipe ${identifier} --output "${lang_dst}")
 	add_dependencies(${target} ${lang_target})
 	add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E remove "${lang_dst}")
 endmacro()
@@ -205,6 +204,16 @@ ENDIF()
 
 set( ZDOOM_OUTPUT_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Directory where zdoom.pk3 and the executable will be created." )
 set( ZDOOM_EXE_NAME "uzdoom" CACHE FILEPATH "Name of the executable to create" )
+
+if(DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+	set(ZDOOM_RESOURCE_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+elseif(WIN32)
+	set(ZDOOM_RESOURCE_DIR "${PROJECT_BINARY_DIR}/$<CONFIG>")
+elseif(APPLE)
+	set(ZDOOM_RESOURCE_DIR "${PROJECT_BINARY_DIR}/${ZDOOM_EXE_NAME}.app/Contents/Resources")
+else()
+	set(ZDOOM_RESOURCE_DIR "${PROJECT_BINARY_DIR}")
+endif()
 
 # Replacement variables for a possible long list of C/C++ compilers compatible with GCC
 if( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" MATCHES "Clang" )
@@ -396,6 +405,11 @@ mark_as_advanced( FORCE_INTERNAL_ASMJIT )
 if (HAVE_VULKAN)
 	add_subdirectory( libraries/ZVulkan )
 endif()
+
+if( MSVC )
+	set(ABSL_MSVC_STATIC_RUNTIME ON)
+endif()
+add_subdirectory( libraries/abseil )
 
 set(ZWIDGET_BUILD_EXAMPLE OFF CACHE INTERNAL "" FORCE)
 add_subdirectory( libraries/ZWidget )

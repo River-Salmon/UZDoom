@@ -402,7 +402,9 @@ void AActor::Serialize(FSerializer &arc)
 		("morphexitflash", MorphExitFlash)
 		("damagesource", damagesource)
 		("behaviors", Behaviors)
-		A("decalgenerator", DecalGenerator);
+		A("decalgenerator", DecalGenerator)
+		A("minrespawntics", MinRespawnTics)
+		A("respawndice", RespawnDice);
 
 		SerializeTerrain(arc, "floorterrain", floorterrain, &def->floorterrain);
 		SerializeArgs(arc, "args", args, def->args, special);
@@ -4264,6 +4266,18 @@ DEFINE_ACTION_FUNCTION(AActor, CheckPortalTransition)
 	return 0;
 }
 
+int AActor::GetModelTimer()
+{
+	if(IsClientSide())
+	{
+		return Level->LocalWorldTimer;
+	}
+	else
+	{
+		return Level->totaltime;
+	}
+}
+
 void AActor::CalcBones(bool recalc)
 {
 	if(modelData && (!recalc || (modelData->flags & MODELDATA_GET_BONE_INFO_RECALC)) && modelData->flags & MODELDATA_GET_BONE_INFO)
@@ -4275,7 +4289,7 @@ void AActor::CalcBones(bool recalc)
 		if(!smf) return;
 
 		bool is_decoupled = flags9 & MF9_DECOUPLEDANIMATIONS;
-		double tic = Level->totaltime + 1;
+		double tic = GetModelTimer() + 1;
 
 		CalcModelFrameInfo frameinfo = CalcModelFrame(Level, smf, state, tics, modelData, this, is_decoupled, tic, 1.0);
 		
@@ -5101,6 +5115,12 @@ void AActor::Tick ()
 	if (tics == -1 || state->GetCanRaise())
 	{
 		int respawn_monsters = G_SkillProperty(SKILLP_Respawn);
+
+		if (MinRespawnTics > 0)
+			respawn_monsters = MinRespawnTics;
+		else if (MinRespawnTics < 0)
+			respawn_monsters = -MinRespawnTics * TICRATE;
+
 		// check for nightmare respawn
 		if (!(flags5 & MF5_ALWAYSRESPAWN))
 		{
@@ -5120,7 +5140,7 @@ void AActor::Tick ()
 		if (Level->time & 31)
 			return;
 
-		if (pr_nightmarerespawn() > 4)
+		if (pr_nightmarerespawn() > RespawnDice)
 			return;
 
 		P_NightmareRespawn (this);
@@ -6432,6 +6452,8 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 	{ // Remove any inventory left from the old actor. Coop handles
 	  // it above, but the other modes don't.
 		DestroyAllInventory(oldactor);
+		// Clean these up as well, otherwise pointer substitution will break a lot of things.
+		oldactor->ClearBehaviors();
 	}
 	// [BC] Handle temporary invulnerability when respawned
 	if (state == PST_REBORN || state == PST_ENTER)
