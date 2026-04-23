@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
-"PO-Revision-Date: 2026-03-15 00:10+0000\n"
+"PO-Revision-Date: 2026-04-14 22:06+0000\n"
 "Last-Translator: Marcus Minhorst <marcus.minhorst@gmail.com>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/uzdoom/common/fr/>"
 "\n"
@@ -52,7 +52,7 @@ msgid "TXT_X_CHEATS"
 msgstr "%s triche"
 
 msgid "MSGOFF"
-msgstr "Messages: INACTIFS"
+msgstr "Messages : INACTIFS"
 
 msgid "MSGON"
 msgstr "Messages : ACTIF"
@@ -97,7 +97,7 @@ msgid "OPTVAL_ON"
 msgstr "Activé"
 
 msgid "OPTVAL_AUTO"
-msgstr ""
+msgstr "Automatique"
 
 msgid "OPTMNU_TITLE"
 msgstr "Options"
@@ -308,6 +308,7 @@ msgid "CNTRLMNU_PREVIOUSITEM"
 msgstr "Objet précédent"
 
 # most are not used yet but will be
+#, fuzzy
 msgid "MAPCNTRLMNU_TITLE"
 msgstr "Contrôles Carte"
 
@@ -780,6 +781,7 @@ msgstr "Options avancées"
 msgid "SNDMNU_MODREPLAYER"
 msgstr "Options lecteur de module"
 
+#, fuzzy
 msgid "SNDMNU_MIDIPLAYER"
 msgstr "Option lecteur MIDI"
 
@@ -1430,9 +1432,6 @@ msgstr "Viseur par défaut"
 
 msgid "HUDMNU_CROSSHAIRCOLOR"
 msgstr "Couleur Viseur"
-
-msgid "HUDMNU_CROSSHAIRHEALTH"
-msgstr "Couleur Viseur selon santé"
 
 msgid "HUDMNU_CROSSHAIRSCALE"
 msgstr "Mise à l'échelle du viseur"

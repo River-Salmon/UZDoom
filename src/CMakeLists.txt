@@ -57,6 +57,7 @@ if( WIN32 )
 
 	set( PROJECT_LIBRARIES
 		Xinput
+		advapi32
 		comctl32
 		comdlg32
 		dbghelp
@@ -858,6 +859,7 @@ set (PCH_SOURCES
 	gamedata/umapinfo.cpp
 	gamedata/d_dehacked.cpp
 	gamedata/g_doomedmap.cpp
+	gamedata/doomfont.cpp
 	gamedata/info.cpp
 	gamedata/keysections.cpp
 	gamedata/p_terrain.cpp
@@ -1215,6 +1217,7 @@ set (PCH_SOURCES
 	utility/nodebuilder/nodebuild_gl.cpp
 	utility/nodebuilder/nodebuild_utility.cpp
 	utility/simdutf/simdutf.cpp
+	utility/system_theme.cpp
 )
 
 if( ZMUSIC_SYSTEM_INSTALL OR NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)

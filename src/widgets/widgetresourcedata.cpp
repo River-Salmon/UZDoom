@@ -23,10 +23,11 @@
 #include "filesystem.h"
 #include "m_argv.h"
 #include "printf.h"
+#include "system_theme.h"
 #include "tarray.h"
 #include "widgets/themedata.h"
 
-CUSTOM_CVARD(Int, ui_theme, 2, CVAR_ARCHIVE | CVAR_GLOBALCONFIG, "launcher theme. 0: auto, 1: dark, 2: light")
+CUSTOM_CVARD(Int, ui_theme, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG, "launcher theme. 0: auto, 1: dark, 2: light")
 {
 	if (self < 0) self = 0;
 	if (self > 2) self = 2;
@@ -59,14 +60,10 @@ void InitWidgetResources(const char* filename)
 	for (int i = 0; i < argc; ++i)
 		open(args[i].GetChars());
 
-	bool use_dark = ui_theme == 1;
+	auto theme = GetSystemTheme();
+	auto use_dark = ui_theme == 1 || (ui_theme == 0 && (theme & Dark));
 
-	if (ui_theme == 0)
-	{
-		// TODO: detect system theme
-	}
-
-	Theme::initilize(use_dark? DARK: LIGHT);
+	Theme::initilize(use_dark? DARK: LIGHT, theme & HighContrast);
 
 	WidgetTheme::SetTheme(std::unique_ptr<WidgetTheme>(new WidgetTheme{{
 		Theme::getMain  (COLOR_BACKGROUND), Theme::getMain  (COLOR_TEXT),
@@ -76,6 +73,8 @@ void InitWidgetResources(const char* filename)
 		Theme::getClick (COLOR_BACKGROUND), Theme::getClick (COLOR_TEXT),
 		Theme::getBorder(COLOR_LIGHT),      Theme::getBorder(COLOR_HEAVY),
 	}}));
+
+	WidgetTheme::GetTheme()->GetStyle("lineedit")->SetDouble("noncontent-top", 6.0); // applicable to noto family fonts
 }
 
 void CloseWidgetResources()
@@ -125,10 +124,10 @@ std::vector<SingleFontData> LoadWidgetFontData(const std::string& name, bool roo
 		// tools/download-fonts.sh wadsrc/static ui/noto 'Noto Sans' 'Noto Sans Armenian' 'Noto Sans Georgian' 'Noto Sans JP' 'Noto Sans KR' 'Noto Sans SC' # 'Noto Sans TC'
 		struct { const char *file; const char *lang; } fonts[] = {
 			// fonts with specific languages list here for high priority
-			{ "ui/noto/noto-sans-jp.ttf", "ja" },
-			{ "ui/noto/noto-sans-kr.ttf", "ko" },
-			{ "ui/noto/noto-sans-sc.ttf", "zh-Hans" },
-			// "ui/noto/noto-sans-tc.ttf", "zh-Hant" },
+			{ "ui/noto/noto-sans-jp.ttf", "ja-*-*" },
+			{ "ui/noto/noto-sans-kr.ttf", "ko-*-*" },
+			{ "ui/noto/noto-sans-sc.ttf", "zh-Hans-*" },
+			// "ui/noto/noto-sans-tc.ttf", "zh-Hant-*" },
 
 			// generic fonts
 			{ "ui/noto/noto-sans.ttf", ""},

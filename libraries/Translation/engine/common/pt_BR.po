@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
-"PO-Revision-Date: 2026-03-26 08:10+0000\n"
+"PO-Revision-Date: 2026-04-14 22:06+0000\n"
 "Last-Translator: Marcus Minhorst <marcus.minhorst@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/"
 "uzdoom/common/pt_BR/>\n"
@@ -309,6 +309,7 @@ msgid "CNTRLMNU_PREVIOUSITEM"
 msgstr "Item anterior"
 
 # most are not used yet but will be
+#, fuzzy
 msgid "MAPCNTRLMNU_TITLE"
 msgstr "Peronalizar comandos do mapa"
 
@@ -518,16 +519,14 @@ msgstr "Nenhum eixo configurável"
 msgid "OPTVAL_NONE"
 msgstr "Nenhum"
 
-#, fuzzy
 msgid "OPTVAL_TURNING"
-msgstr "Girar"
+msgstr "Olhar para a Esquerda/Direita"
 
 msgid "OPTVAL_LOOKINGUPDOWN"
 msgstr "Olhar para cima/baixo"
 
-#, fuzzy
 msgid "OPTVAL_MOVINGFORWARD"
-msgstr "Mover-se para a frente"
+msgstr "Mover-se para a frente/trás"
 
 #, fuzzy
 msgid "OPTVAL_STRAFING"
@@ -783,7 +782,7 @@ msgid "SNDMNU_MODREPLAYER"
 msgstr "Opções de reprodutor de módulos"
 
 msgid "SNDMNU_MIDIPLAYER"
-msgstr "Opções de reprodutor MIDI"
+msgstr "Opções do dispositivo MIDI"
 
 msgid "ADVSNDMNU_TITLE"
 msgstr "Opções de áudio avançadas"
@@ -1447,9 +1446,6 @@ msgstr "Mira padrão"
 msgid "HUDMNU_CROSSHAIRCOLOR"
 msgstr "Cor da mira"
 
-msgid "HUDMNU_CROSSHAIRHEALTH"
-msgstr "Exibir saúde na mira"
-
 msgid "HUDMNU_CROSSHAIRSCALE"
 msgstr "Redimensionar mira"
 
@@ -1821,3 +1817,9 @@ msgstr "Sobre"
 
 msgid "PICKER_TAB_RELEASE"
 msgstr "Notas da versão"
+
+msgid "MSGMNU_MESSAGEQUEUE"
+msgstr "Quantidade de Mensagens"
+
+msgid "MSGMNU_STACKIDENTICAL"
+msgstr "Combinar mensagens repetidas"
